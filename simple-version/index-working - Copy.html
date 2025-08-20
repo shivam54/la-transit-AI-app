@@ -1,0 +1,4246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LA Transit App - Route Planner</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-items {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .search-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .search-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+            height: calc(100vh - 80px); /* Subtract header height */
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Welcome Screen Styles */
+        .welcome-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .welcome-content {
+            max-width: 800px;
+            padding: 1.5rem;
+            text-align: center;
+            color: white;
+            animation: slideUp 0.8s ease 0.2s both;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .welcome-hero {
+            margin-bottom: 2rem;
+        }
+
+        .hero-icon {
+            font-size: 3rem;
+            margin-bottom: 0.75rem;
+            animation: bounce 2s infinite;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #fff, #e3f2fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .stat-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .quick-actions {
+            margin-bottom: 2rem;
+        }
+
+        .quick-actions h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            opacity: 0.95;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 0.75rem 1rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-icon {
+            font-size: 1.5rem;
+        }
+
+        .btn-text {
+            font-weight: 500;
+        }
+
+        .features-preview {
+            margin-bottom: 2rem;
+        }
+
+        .features-preview h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            opacity: 0.95;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-icon {
+            font-size: 1rem;
+        }
+
+        .feature-text {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .loading-section {
+            margin-top: 1.5rem;
+        }
+
+        .loading-text {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 0.75rem;
+        }
+
+        .loading-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .loading-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00bcd4, #2196f3);
+            border-radius: 2px;
+            animation: loading 3s ease-in-out;
+        }
+
+        .get-started-section {
+            margin-top: 2rem;
+            animation: slideUp 0.5s ease;
+        }
+
+        .get-started-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0 auto;
+        }
+
+        .get-started-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+            background: linear-gradient(135deg, #218838, #1e7e34);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @keyframes loading {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+
+        /* Fade out animation for welcome screen */
+        .welcome-screen.fade-out {
+            animation: fadeOut 0.8s ease forwards;
+        }
+
+        @keyframes fadeOut {
+            to { 
+                opacity: 0; 
+                transform: scale(1.05);
+            }
+        }
+
+        .panel {
+            width: 380px;
+            background: white;
+            border-left: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100%;
+            max-height: 100%;
+        }
+
+        .panel-header {
+            padding: 2rem 1.5rem;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+            border-bottom: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .panel-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .panel-header h2,
+        .panel-header p {
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+            z-index: 2;
+            margin: 0;
+        }
+
+        .panel-header h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        .panel-header p {
+            font-size: 1rem;
+            opacity: 0.95;
+            font-weight: 400;
+        }
+
+        /* Clean Professional Design */
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            min-height: 0;
+            background: #f8fafc;
+            color: #1f2937;
+            max-height: calc(100% - 120px); /* Subtract header height */
+        }
+
+        .fact-item,
+        .weather-stat {
+            color: #374151;
+            text-shadow: none;
+        }
+
+        .weather-main {
+            color: #1f2937;
+        }
+
+        .weather-temp-large {
+            color: #1f2937;
+            text-shadow: none;
+        }
+
+        .weather-condition,
+        .weather-feels {
+            color: #6b7280;
+            text-shadow: none;
+        }
+
+        /* Hide Quick Actions panel */
+        .quick-actions-panel {
+            display: none !important;
+        }
+
+        /* Simple Clean Header and Panel */
+        .panel-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-header h2,
+        .panel-header p {
+            color: white;
+            margin: 0;
+        }
+
+        .panel-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .panel-content {
+            background: #f8fafc;
+            padding: 1.5rem;
+        }
+
+        /* Simple Cards */
+        .la-facts,
+        .live-weather {
+            background: white;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .la-facts h4,
+        .live-weather h4 {
+            color: #1f2937;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .facts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .fact-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .fact-icon {
+            font-size: 1.2rem;
+        }
+
+        .weather-main {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .weather-icon-large {
+            font-size: 3rem;
+        }
+
+        .weather-temp-large {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .weather-condition {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .weather-feels {
+            color: #6b7280;
+        }
+
+        .weather-stats {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(90px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .weather-stat {
+            text-align: center;
+            padding: 0.75rem 0.5rem;
+            background: #f8fafc;
+            border-radius: 8px;
+            min-width: 0;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .stat-icon {
+            font-size: 1.3rem;
+            margin-bottom: 0.4rem;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: #6b7280;
+            margin-bottom: 0.3rem;
+            line-height: 1.1;
+            word-break: break-word;
+            hyphens: auto;
+            display: block;
+        }
+
+        .stat-value {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #1f2937;
+            line-height: 1.1;
+            word-break: break-word;
+            display: block;
+        }
+
+        /* Simple Slideshow */
+        .la-slideshow {
+            height: 220px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .slide.active {
+            opacity: 1;
+        }
+
+        .slide-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+            color: white;
+            padding: 1.5rem;
+        }
+
+        .slide-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .slide-description {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .la-facts,
+        .live-weather {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .la-facts h4,
+        .live-weather h4 {
+            color: #1f2937;
+            text-shadow: none;
+        }
+
+        .fact-item,
+        .weather-stat {
+            color: #374151;
+            text-shadow: none;
+        }
+
+        .weather-main {
+            color: #1f2937;
+        }
+
+        .weather-temp-large {
+            color: #1f2937;
+            text-shadow: none;
+        }
+
+        .weather-condition,
+        .weather-feels {
+            color: #6b7280;
+            text-shadow: none;
+        }
+
+        /* Professional Cards */
+        .la-facts,
+        .live-weather {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .la-facts::before,
+        .live-weather::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6 0%, #1d4ed8 50%, #1e40af 100%);
+        }
+
+        .la-facts h4,
+        .live-weather h4 {
+            color: #1e40af;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .fact-item {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 1rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
+        }
+
+        .fact-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .fact-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .weather-main {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-radius: 16px;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .weather-temp-large {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #1e40af;
+            margin-bottom: 0.25rem;
+        }
+
+        .weather-condition {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.25rem;
+        }
+
+        .weather-stat {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 1.25rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .weather-stat:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+        }
+
+        .stat-value {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1e40af;
+        }
+
+        .weather-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .weather-stat {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 1.25rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .weather-stat:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1e40af;
+        }
+
+        /* Professional Slideshow */
+        .la-slideshow {
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            height: 320px;
+            position: relative;
+        }
+
+        .slide-overlay {
+            background: linear-gradient(
+                to top,
+                rgba(0, 0, 0, 0.8) 0%,
+                rgba(0, 0, 0, 0.4) 40%,
+                transparent 70%
+            );
+            padding: 2rem;
+            text-align: left;
+        }
+
+        .slide-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            letter-spacing: -0.025em;
+        }
+
+        .slide-description {
+            font-size: 1.125rem;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 500;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+            line-height: 1.4;
+        }
+
+        /* Hide broken images and weather time */
+        .slide[style*="photo-1598279007772-929619e571d5"] {
+            display: none !important;
+        }
+
+        .weather-time {
+            display: none !important;
+        }
+
+        /* Ensure slideshow works */
+        .la-slideshow {
+            position: relative;
+        }
+
+        /* Clean up any remaining issues */
+        * {
+            box-sizing: border-box;
+        }
+
+        /* Search Modal Popup */
+        .search-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .search-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 0;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease;
+            position: relative;
+        }
+
+        .search-header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-header h3 {
+            margin: 0;
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .close-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.2s ease;
+        }
+
+        .close-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .search-form {
+            padding: 2rem;
+        }
+
+        .current-location-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .current-location-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: #f9fafb;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+            color: #6b7280;
+        }
+
+        .transport-modes {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+        }
+
+        .mode-button {
+            background: #f3f4f6;
+            border: 2px solid #e5e7eb;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            color: #374151;
+        }
+
+        .mode-button:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+
+        .mode-button.active {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .search-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 700;
+            width: 100%;
+            transition: all 0.2s ease;
+            margin-top: 1rem;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .results-container {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f9fafb;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Professional Navigation Overlay */
+        .navigation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f8fafc;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .nav-header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+            color: white;
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .nav-header > div {
+            position: relative;
+            z-index: 2;
+        }
+
+        .nav-header h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-header p {
+            font-size: 1rem;
+            margin: 0.5rem 0 0 0;
+            opacity: 0.95;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .exit-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 2;
+        }
+
+        .exit-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-content {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+        }
+
+        .nav-map-container {
+            flex: 1;
+            background: #e5e7eb;
+            position: relative;
+            border-right: 1px solid #d1d5db;
+        }
+
+        .directions-panel {
+            width: 400px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .current-step {
+            padding: 1.5rem;
+            border-bottom: 2px solid #f1f5f9;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        .step-progress {
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .step-counter {
+            font-size: 0.9rem;
+            color: #6b7280;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .current-instruction {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            margin-bottom: 1rem;
+        }
+
+        .current-instruction h4 {
+            margin: 0 0 0.5rem 0;
+            color: #1f2937;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .current-instruction p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .live-info {
+            background: white;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .movement-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .directions-list {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            background: #fafbfc;
+        }
+
+        .directions-list h5 {
+            margin: 0 0 1rem 0;
+            color: #374151;
+            font-size: 1rem;
+            font-weight: 700;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            background: white;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .step-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .step-item.active {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.2);
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        }
+
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .step-instruction {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+        }
+
+        .step-details {
+            color: #6b7280;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .live-transit-panel {
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #3b82f6;
+            margin-top: 1rem;
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.1);
+        }
+
+        .live-transit-panel h5 {
+            margin: 0 0 1rem 0;
+            color: #1e40af;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .arrival-times {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .arrival-time {
+            background: white;
+            padding: 0.75rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .arrival-time.next {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        }
+
+        .time-value {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .time-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .station-visuals {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .visual-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .visual-item img {
+            width: 100%;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+        }
+
+        .visual-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-content {
+                flex-direction: column;
+            }
+            
+            .directions-panel {
+                width: 100%;
+                height: 50%;
+            }
+            
+            .nav-map-container {
+                height: 50%;
+                border-right: none;
+                border-bottom: 1px solid #d1d5db;
+            }
+        }
+
+        /* Panel Responsive Design */
+        @media (max-height: 800px) {
+            .la-slideshow {
+                height: 180px;
+            }
+            
+            .la-facts,
+            .live-weather {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            
+            .panel-header {
+                padding: 1.5rem;
+            }
+            
+            .panel-content {
+                padding: 1.25rem;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .la-slideshow {
+                height: 140px;
+            }
+            
+            .la-facts h4,
+            .live-weather h4 {
+                font-size: 1rem;
+                margin-bottom: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            🚇 LA Transit
+        </div>
+        <div class="nav-items">
+            <div class="nav-item">
+                🗺️ Routes
+            </div>
+            <div class="nav-item">
+                📍 Locations
+            </div>
+            <button class="search-button" onclick="toggleSearch()">
+                🔍 Search Routes
+            </button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="map-container">
+            <!-- Welcome Screen -->
+            <div id="welcomeScreen" class="welcome-screen">
+                <div class="welcome-content">
+                    <div class="welcome-hero">
+                        <div class="hero-icon">🚇</div>
+                        <h1 class="hero-title">Welcome to LA Transit</h1>
+                        <p class="hero-subtitle">Your smart companion for navigating Los Angeles</p>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">🚊</div>
+                            <div class="stat-number">6</div>
+                            <div class="stat-label">Metro Lines</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🚌</div>
+                            <div class="stat-number">200+</div>
+                            <div class="stat-label">Bus Routes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📍</div>
+                            <div class="stat-number">93</div>
+                            <div class="stat-label">Metro Stations</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⚡</div>
+                            <div class="stat-number">24/7</div>
+                            <div class="stat-label">Live Updates</div>
+                        </div>
+                    </div>
+                    
+                    <div class="quick-actions">
+                        <h3>Quick Actions</h3>
+                        <div class="action-buttons">
+                            <button class="action-btn" onclick="quickSearch('Downtown', 'USC')">
+                                <span class="btn-icon">🏢</span>
+                                <span class="btn-text">Downtown → USC</span>
+                            </button>
+                            <button class="action-btn" onclick="quickSearch('Hollywood', 'Santa Monica')">
+                                <span class="btn-icon">🌟</span>
+                                <span class="btn-text">Hollywood → Beach</span>
+                            </button>
+                            <button class="action-btn" onclick="quickSearch('LAX', 'Downtown')">
+                                <span class="btn-icon">✈️</span>
+                                <span class="btn-text">Airport → Downtown</span>
+                            </button>
+                            <button class="action-btn" onclick="toggleSearch()">
+                                <span class="btn-icon">🔍</span>
+                                <span class="btn-text">Plan Custom Route</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="features-preview">
+                        <h3>What's New</h3>
+                        <div class="feature-list">
+                            <div class="feature-item">
+                                <span class="feature-icon">📱</span>
+                                <span class="feature-text">Live GPS Navigation</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">⏰</span>
+                                <span class="feature-text">Real-time Arrivals</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">🗺️</span>
+                                <span class="feature-text">Turn-by-turn Directions</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-icon">🚴</span>
+                                <span class="feature-text">Multi-modal Planning</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="loading-section">
+                        <div class="loading-text" id="loadingText">🌟 Preparing Your LA Adventure...</div>
+                        <div class="loading-bar">
+                            <div class="loading-progress" id="loadingProgress"></div>
+                        </div>
+                        <div class="get-started-section" id="getStartedSection" style="display: none;">
+                            <div class="completion-message" id="completionMessage" style="margin-bottom: 1rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.1); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2);">
+                                <div style="font-size: 1.1rem; font-weight: bold; margin-bottom: 0.5rem;">🎉 Ready to Explore LA!</div>
+                                <div style="font-size: 0.9rem; opacity: 0.9;">
+                                    🚇 Metro lines loaded • 🚌 Bus routes ready • 📍 Stations mapped • ⏰ Schedules synced
+                                </div>
+                            </div>
+                            <button class="get-started-btn" onclick="proceedToMap()">
+                                🚀 Get Started
+                            </button>
+                            <p style="font-size: 0.9rem; opacity: 0.8; margin-top: 0.5rem;">
+                                Or choose a quick route above
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="map"></div>
+        </div>
+        
+        <div class="panel" id="panel">
+            <div class="panel-header">
+                <h2>🌆 Discover LA</h2>
+                <p>Experience the City of Angels</p>
+            </div>
+            <div class="panel-content" id="panelContent">
+                <!-- LA Images Slideshow -->
+                <div class="la-slideshow" id="laSlideshow">
+                    <div class="slide active" style="background-image: url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🏙️ Downtown LA</div>
+                            <div class="slide-description">Metro Center connects all major lines</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1523987355523-c7b5b0dd2973?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🌟 Hollywood</div>
+                            <div class="slide-description">Red Line to the Walk of Fame</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🌊 Santa Monica</div>
+                            <div class="slide-description">Expo Line to the Pacific Ocean</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🏛️ Union Station</div>
+                            <div class="slide-description">Historic gateway to LA</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1562774053-701939374585?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🎓 USC Campus</div>
+                            <div class="slide-description">Expo Line connects students</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1598279007772-929619e571d5?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🌴 Venice Beach</div>
+                            <div class="slide-description">Boardwalk & ocean vibes</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🌴 Venice Beach</div>
+                            <div class="slide-description">Boardwalk & ocean vibes</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1598279007772-929619e571d5?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🖼️ The Getty Center</div>
+                            <div class="slide-description">Art & architecture</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1598279007772-929619e571d5?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🎬 Universal Studios</div>
+                            <div class="slide-description">Movie magic & thrills</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1598279007772-929619e571d5?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🏖️ Malibu</div>
+                            <div class="slide-description">Beach paradise</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1598279007772-929619e571d5?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🎨 LACMA</div>
+                            <div class="slide-description">Los Angeles County Museum</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1598279007772-929619e571d5?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🏀 Crypto.com Arena</div>
+                            <div class="slide-description">Home of LA sports & concerts</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1598279007772-929619e571d5?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🛍️ The Grove</div>
+                            <div class="slide-description">Shopping, dining & entertainment</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1598279007772-929619e571d5?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🌳 Exposition Park</div>
+                            <div class="slide-description">Museums, gardens & sports</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1598279007772-929619e571d5?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🎶 Walt Disney Concert Hall</div>
+                            <div class="slide-description">Architectural marvel & music venue</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1598279007772-929619e571d5?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🍣 Little Tokyo</div>
+                            <div class="slide-description">Cultural hub & culinary delights</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1598279007772-929619e571d5?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">⚽ SoFi Stadium</div>
+                            <div class="slide-description">Home of the Rams & Chargers</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1598279007772-929619e571d5?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🎡 Santa Monica Pier</div>
+                            <div class="slide-description">Iconic landmark & amusement</div>
+                        </div>
+                    </div>
+                    <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1598279007772-929619e571d5?w=400&h=300&fit=crop')">
+                        <div class="slide-overlay">
+                            <div class="slide-title">🌉 Vincent Thomas Bridge</div>
+                            <div class="slide-description">Iconic gateway to Port of LA</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 
+                    <div class="slideshow-indicators">
+                        <div class="indicator active"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                        <div class="indicator"></div>
+                    </div>
+                    -->
+                </div>
+
+                <!-- LA Facts & Info -->
+                <div class="la-facts">
+                    <h4>🌆 LA Quick Facts</h4>
+                    <div class="facts-grid">
+                        <div class="fact-item">
+                            <span class="fact-icon">🌆</span>
+                            <span>4 Million+ People</span>
+                        </div>
+                        <div class="fact-item">
+                            <span class="fact-icon">🌞</span>
+                            <span>284 Sunny Days</span>
+                        </div>
+                        <div class="fact-item">
+                            <span class="fact-icon">🎬</span>
+                            <span>Entertainment Capital</span>
+                        </div>
+                        <div class="fact-item">
+                            <span class="fact-icon">🌊</span>
+                            <span>75 Miles Coastline</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Weather Forecast -->
+                <div class="live-weather" id="weatherContainer">
+                    <div class="weather-main">
+                        <div class="weather-icon-large">☀️</div>
+                        <div class="weather-details">
+                            <div class="weather-temp-large">72°F</div>
+                            <div class="weather-condition">Sunny</div>
+                            <div class="weather-feels">Feels like 74°F</div>
+                        </div>
+                    </div>
+                    <div class="weather-stats">
+                        <div class="weather-stat">
+                            <span class="stat-icon">💧</span>
+                            <span class="stat-label">Humidity</span>
+                            <span class="stat-value">45%</span>
+                        </div>
+                        <div class="weather-stat">
+                            <span class="stat-icon">💨</span>
+                            <span class="stat-label">Wind</span>
+                            <span class="stat-value">8 mph</span>
+                        </div>
+                        <div class="weather-stat">
+                            <span class="stat-icon">☀️</span>
+                            <span class="stat-label">UV Index</span>
+                            <span class="stat-value">High</span>
+                        </div>
+                    </div>
+                    <div class="weather-time">Updated: Now</div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions-panel">
+                    <h4>⚡ Quick Actions</h4>
+                    <div class="action-buttons">
+                        <button class="action-btn" onclick="getCurrentLocation()">
+                            <span class="btn-icon">📍</span>
+                            <span class="btn-text">My Location</span>
+                        </button>
+                        <button class="action-btn" onclick="toggleSearch()">
+                            <span class="btn-icon">🔍</span>
+                            <span class="btn-text">Plan Route</span>
+                        </button>
+                        <button class="action-btn" onclick="showNearbyStations()">
+                            <span class="btn-icon">🚇</span>
+                            <span class="btn-text">Nearby Stations</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Panel -->
+    <div class="search-container" id="searchPanel" style="display: none;">
+        <div class="search-panel">
+            <div class="search-header">
+                <h3>🔍 Plan Your Journey</h3>
+                <button class="close-button" onclick="toggleSearch()">✕</button>
+            </div>
+            <form class="search-form" onsubmit="handleSearch(event)">
+                <button type="button" class="current-location-btn" onclick="getCurrentLocation()">
+                    📍 Use Current Location
+                </button>
+                
+                <div class="input-group">
+                    <input type="text" id="originInput" class="search-input" placeholder="From (e.g., Downtown, USC, Beverly Hills)" required>
+                    <span class="input-icon">📍</span>
+                </div>
+                
+                <div class="input-group">
+                    <input type="text" id="destinationInput" class="search-input" placeholder="To (e.g., Santa Monica, LAX, Hollywood)" required>
+                    <span class="input-icon">🎯</span>
+                </div>
+                
+                <div class="transport-modes">
+                    <button type="button" class="mode-button active" onclick="setMode('metro')">🚇 Metro</button>
+                    <button type="button" class="mode-button" onclick="setMode('bus')">🚌 Bus</button>
+                    <button type="button" class="mode-button" onclick="setMode('walk')">🚶 Walk</button>
+                    <button type="button" class="mode-button" onclick="setMode('bike')">🚲 Bike</button>
+                </div>
+                
+                <button type="submit" class="search-btn">🔍 Find Routes</button>
+            </form>
+            
+            <div class="results-container" id="searchResults" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let map;
+        let currentMode = 'metro';
+        let currentLocation = null;
+        let currentRoutes = [];
+        let isNavigating = false;
+        let currentStepIndex = 0;
+        let navigationInterval = null;
+        let watchId = null;
+        let isMoving = false;
+        let stepStartTime = null;
+        let currentRoute = null;
+
+        // Location data
+        const locations = {
+            'downtown': { lat: 34.0522, lng: -118.2437, name: 'Downtown Los Angeles' },
+            'downtown la': { lat: 34.0522, lng: -118.2437, name: 'Downtown Los Angeles' },
+            'downtown los angeles': { lat: 34.0522, lng: -118.2437, name: 'Downtown Los Angeles' },
+            'usc': { lat: 34.0224, lng: -118.2851, name: 'University of Southern California' },
+            'university of southern california': { lat: 34.0224, lng: -118.2851, name: 'University of Southern California' },
+            'ucla': { lat: 34.0689, lng: -118.4452, name: 'University of California Los Angeles' },
+            'beverly hills': { lat: 34.0736, lng: -118.4001, name: 'Beverly Hills' },
+            'hollywood': { lat: 34.0928, lng: -118.3287, name: 'Hollywood' },
+            'santa monica': { lat: 34.0195, lng: -118.4912, name: 'Santa Monica' },
+            'venice': { lat: 34.0195, lng: -118.4912, name: 'Venice Beach' },
+            'lax': { lat: 33.9425, lng: -118.4081, name: 'Los Angeles International Airport' },
+            'koreatown': { lat: 34.0579, lng: -118.3009, name: 'Koreatown' },
+            'pasadena': { lat: 34.1478, lng: -118.1445, name: 'Pasadena' },
+            'long beach': { lat: 33.7701, lng: -118.1937, name: 'Long Beach' }
+        };
+
+        // Transit system data
+        const transitSystem = {
+            metro: {
+                'red-line': {
+                    name: 'Red Line',
+                    color: '#ee0000',
+                    stations: [
+                        { name: 'Union Station', lat: 34.0560, lng: -118.2348 },
+                        { name: 'Civic Center/Grand Park', lat: 34.0556, lng: -118.2441 },
+                        { name: 'Pershing Square', lat: 34.0486, lng: -118.2518 },
+                        { name: '7th Street/Metro Center', lat: 34.0485, lng: -118.2590 },
+                        { name: 'MacArthur Park', lat: 34.0571, lng: -118.2756 },
+                        { name: 'Wilshire/Vermont', lat: 34.0620, lng: -118.2910 },
+                        { name: 'Hollywood/Western', lat: 34.1016, lng: -118.3096 },
+                        { name: 'Hollywood/Vine', lat: 34.1016, lng: -118.3267 },
+                        { name: 'Hollywood/Highland', lat: 34.1016, lng: -118.3387 },
+                        { name: 'Universal City/Studio City', lat: 34.1384, lng: -118.3533 },
+                        { name: 'North Hollywood', lat: 34.1680, lng: -118.3770 }
+                    ]
+                },
+                'blue-line': {
+                    name: 'Blue Line',
+                    color: '#0066cc',
+                    stations: [
+                        { name: '7th Street/Metro Center', lat: 34.0485, lng: -118.2590 },
+                        { name: 'Pico', lat: 34.0424, lng: -118.2651 },
+                        { name: 'San Pedro Street', lat: 34.0332, lng: -118.2587 },
+                        { name: 'Washington', lat: 34.0142, lng: -118.2906 },
+                        { name: 'Vernon', lat: 34.0045, lng: -118.2914 },
+                        { name: 'Slauson', lat: 33.9890, lng: -118.2930 },
+                        { name: 'Florence', lat: 33.9730, lng: -118.2946 },
+                        { name: 'Firestone', lat: 33.9584, lng: -118.2808 },
+                        { name: 'Long Beach', lat: 33.7701, lng: -118.1937 }
+                    ]
+                },
+                'expo-line': {
+                    name: 'Expo Line',
+                    color: '#00bfff',
+                    stations: [
+                        { name: '7th Street/Metro Center', lat: 34.0485, lng: -118.2590 },
+                        { name: 'Pico', lat: 34.0424, lng: -118.2651 },
+                        { name: 'Jefferson/USC', lat: 34.0224, lng: -118.2851 },
+                        { name: 'Expo Park/USC', lat: 34.0180, lng: -118.2886 },
+                        { name: 'Culver City', lat: 34.0259, lng: -118.3962 },
+                        { name: 'Santa Monica', lat: 34.0195, lng: -118.4912 }
+                    ]
+                }
+            },
+            bus: {
+                'metro-720': {
+                    name: 'Metro Rapid 720',
+                    color: '#ff6b35',
+                    stops: [
+                        { name: 'Downtown LA', lat: 34.0522, lng: -118.2437 },
+                        { name: 'Koreatown', lat: 34.0579, lng: -118.3009 },
+                        { name: 'Beverly Hills', lat: 34.0736, lng: -118.4001 },
+                        { name: 'Santa Monica', lat: 34.0195, lng: -118.4912 }
+                    ]
+                }
+            }
+        };
+
+        // Speed constants (mph)
+        const SPEEDS = {
+            walk: 3,
+            bike: 12,
+            metro: 35,
+            bus: 25
+        };
+
+        // Amenities data for LA area
+        const amenitiesData = {
+            restaurants: [
+                { name: "Grand Central Market", lat: 34.0506, lng: -118.2490, type: "food_court", rating: 4.5, price: "$$", hours: "8AM-10PM", walkTime: 2 },
+                { name: "Philippe The Original", lat: 34.0560, lng: -118.2380, type: "deli", rating: 4.3, price: "$", hours: "6AM-10PM", walkTime: 3 },
+                { name: "Bottega Louie", lat: 34.0522, lng: -118.2545, type: "italian", rating: 4.4, price: "$$$", hours: "8AM-12AM", walkTime: 4 },
+                { name: "The Original Pantry Cafe", lat: 34.0440, lng: -118.2580, type: "american", rating: 4.2, price: "$$", hours: "24 Hours", walkTime: 5 },
+                { name: "Guelaguetza", lat: 34.0579, lng: -118.3009, type: "mexican", rating: 4.6, price: "$$", hours: "9AM-9PM", walkTime: 3 },
+                { name: "Night + Market", lat: 34.0928, lng: -118.3287, type: "thai", rating: 4.5, price: "$$", hours: "5PM-12AM", walkTime: 4 },
+                { name: "In-N-Out Burger", lat: 34.0195, lng: -118.4800, type: "fast_food", rating: 4.4, price: "$", hours: "10:30AM-1AM", walkTime: 6 },
+                { name: "Republique", lat: 34.0736, lng: -118.4001, type: "french", rating: 4.3, price: "$$$", hours: "8AM-10PM", walkTime: 8 }
+            ],
+            restrooms: [
+                { name: "Union Station Public Restrooms", lat: 34.0560, lng: -118.2348, type: "public", accessible: true, hours: "4AM-1AM", walkTime: 1 },
+                { name: "7th Street/Metro Center Facilities", lat: 34.0485, lng: -118.2590, type: "metro", accessible: true, hours: "4AM-12AM", walkTime: 0 },
+                { name: "Grand Central Market Restrooms", lat: 34.0506, lng: -118.2490, type: "market", accessible: true, hours: "8AM-10PM", walkTime: 2 },
+                { name: "Hollywood/Highland Station", lat: 34.1016, lng: -118.3387, type: "metro", accessible: true, hours: "4AM-12AM", walkTime: 0 },
+                { name: "Santa Monica Pier Restrooms", lat: 34.0195, lng: -118.4912, type: "public", accessible: true, hours: "24 Hours", walkTime: 3 },
+                { name: "USC Campus Center", lat: 34.0224, lng: -118.2851, type: "campus", accessible: true, hours: "6AM-11PM", walkTime: 2 },
+                { name: "Beverly Hills City Hall", lat: 34.0736, lng: -118.4001, type: "public", accessible: true, hours: "8AM-5PM", walkTime: 4 }
+            ],
+            parking: [
+                { name: "Union Station Parking", lat: 34.0560, lng: -118.2348, type: "transit", spaces: 2200, rate: "$8/day", hours: "24 Hours", walkTime: 1 },
+                { name: "7th & Figueroa Parking", lat: 34.0485, lng: -118.2590, type: "garage", spaces: 800, rate: "$15/day", hours: "24 Hours", walkTime: 2 },
+                { name: "Hollywood & Highland Parking", lat: 34.1016, lng: -118.3387, type: "mall", spaces: 3000, rate: "$2/hr", hours: "6AM-2AM", walkTime: 1 },
+                { name: "Santa Monica Pier Parking", lat: 34.0195, lng: -118.4912, type: "beach", spaces: 1500, rate: "$3/hr", hours: "24 Hours", walkTime: 5 },
+                { name: "USC Structure X", lat: 34.0224, lng: -118.2851, type: "campus", spaces: 1200, rate: "$12/day", hours: "24 Hours", walkTime: 3 },
+                { name: "Beverly Hills Civic Center", lat: 34.0736, lng: -118.4001, type: "municipal", spaces: 600, rate: "Free 2hrs", hours: "8AM-6PM", walkTime: 2 }
+            ],
+            services: [
+                { name: "CVS Pharmacy", lat: 34.0522, lng: -118.2437, type: "pharmacy", hours: "7AM-10PM", walkTime: 3 },
+                { name: "Chase Bank ATM", lat: 34.0485, lng: -118.2590, type: "atm", hours: "24 Hours", walkTime: 1 },
+                { name: "Starbucks Coffee", lat: 34.0560, lng: -118.2348, type: "coffee", hours: "5AM-9PM", walkTime: 2 },
+                { name: "FedEx Office", lat: 34.0928, lng: -118.3287, type: "shipping", hours: "8AM-9PM", walkTime: 4 },
+                { name: "Target Store", lat: 34.0195, lng: -118.4912, type: "retail", hours: "8AM-10PM", walkTime: 7 },
+                { name: "LA Fitness", lat: 34.0579, lng: -118.3009, type: "gym", hours: "5AM-11PM", walkTime: 5 }
+            ]
+        };
+
+        // Initialize map
+        function initMap() {
+            if (window.map) return;
+
+            map = L.map('map').setView([34.0522, -118.2437], 10);
+            window.map = map;
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Draw metro lines
+            Object.entries(transitSystem.metro).forEach(([lineKey, line]) => {
+                const coordinates = line.stations.map(station => [station.lat, station.lng]);
+                
+                const polyline = L.polyline(coordinates, {
+                    color: line.color,
+                    weight: 6,
+                    opacity: 0.8
+                }).addTo(map);
+
+                // Add station markers
+                line.stations.forEach(station => {
+                    L.circleMarker([station.lat, station.lng], {
+                        color: line.color,
+                        fillColor: line.color,
+                        fillOpacity: 0.8,
+                        radius: 6
+                    }).addTo(map).bindPopup(`
+                        <h3>${station.name}</h3>
+                        <p><strong>Line:</strong> ${line.name}</p>
+                    `);
+                });
+            });
+
+            // Draw bus routes
+            Object.entries(transitSystem.bus).forEach(([routeKey, route]) => {
+                const coordinates = route.stops.map(stop => [stop.lat, stop.lng]);
+                
+                const polyline = L.polyline(coordinates, {
+                    color: route.color,
+                    weight: 4,
+                    opacity: 0.6,
+                    dashArray: '10, 5'
+                }).addTo(map);
+
+                // Add bus stop markers
+                route.stops.forEach(stop => {
+                    L.circleMarker([stop.lat, stop.lng], {
+                        color: route.color,
+                        fillColor: route.color,
+                        fillOpacity: 0.6,
+                        radius: 4
+                    }).addTo(map).bindPopup(`
+                        <h3>${stop.name}</h3>
+                        <p><strong>Route:</strong> ${route.name}</p>
+                    `);
+                });
+            });
+        }
+
+        // Calculate distance using Haversine formula
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 3959; // Earth's radius in miles
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distance = R * c;
+            console.log(`📏 Distance calculation: (${lat1}, ${lng1}) to (${lat2}, ${lng2}) = ${distance.toFixed(4)} miles`);
+            return distance;
+        }
+
+        // Find location coordinates
+        async function findLocationCoordinates(locationName) {
+            const searchName = locationName.toLowerCase().trim();
+            
+            // Check hardcoded locations first
+            if (locations[searchName]) {
+                return locations[searchName];
+            }
+            
+            // Try partial matches
+            for (const [key, location] of Object.entries(locations)) {
+                if (key.includes(searchName) || searchName.includes(key)) {
+                    return location;
+                }
+            }
+            
+            // Try geocoding for addresses
+            if (searchName.includes('street') || searchName.includes('avenue') || searchName.includes('boulevard')) {
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName + ', Los Angeles, CA')}&limit=1`);
+                    const data = await response.json();
+                    
+                    if (data && data.length > 0) {
+                        return {
+                            lat: parseFloat(data[0].lat),
+                            lng: parseFloat(data[0].lon),
+                            name: data[0].display_name
+                        };
+                    }
+                } catch (error) {
+                    console.error('Geocoding error:', error);
+                }
+            }
+            
+            return null;
+        }
+
+        // Find nearest transit stop
+        function findNearestStop(lat, lng, mode) {
+            let minDistance = Infinity;
+            let nearest = null;
+            
+            const system = transitSystem[mode] || {};
+            
+            Object.entries(system).forEach(([routeKey, route]) => {
+                const stops = route.stations || route.stops || [];
+                stops.forEach(stop => {
+                    const distance = calculateDistance(lat, lng, stop.lat, stop.lng);
+                    if (distance < minDistance && distance <= 5) { // Within 5 miles
+                        minDistance = distance;
+                        nearest = {
+                            ...stop,
+                            route: route,
+                            routeKey: routeKey,
+                            distance: distance
+                        };
+                    }
+                });
+            });
+            
+            return nearest;
+        }
+
+        // Plan route
+        async function planRoute(origin, destination, mode) {
+            console.log('Planning route:', { origin, destination, mode });
+            
+            // Handle current location
+            let originCoords, destCoords;
+            
+            if (origin.toLowerCase() === 'current location' || origin.toLowerCase().includes('📍')) {
+                if (currentLocation) {
+                    originCoords = currentLocation;
+                } else {
+                    return {
+                        type: 'error',
+                        message: 'Current location not available. Please use the "📍 Current Location" button first.'
+                    };
+                }
+            } else {
+                originCoords = await findLocationCoordinates(origin);
+                if (!originCoords) {
+                    return {
+                        type: 'error',
+                        message: `Origin "${origin}" not found. Please check spelling or try a different location.`
+                    };
+                }
+            }
+            
+            destCoords = await findLocationCoordinates(destination);
+            if (!destCoords) {
+                return {
+                    type: 'error',
+                    message: `Destination "${destination}" not found. Please check spelling or try a different location.`
+                };
+            }
+            
+            const directDistance = calculateDistance(originCoords.lat, originCoords.lng, destCoords.lat, destCoords.lng);
+            
+            if (mode === 'walk') {
+                if (directDistance > 3) {
+                    return {
+                        type: 'suggestion',
+                        message: `Walking distance (${directDistance.toFixed(1)} miles) is quite far. Consider biking or transit.`,
+                        suggestion: 'bike'
+                    };
+                }
+                
+                const walkTime = Math.round(directDistance / SPEEDS.walk * 60);
+                return {
+                    type: 'route',
+                    totalTime: walkTime,
+                    totalDistance: directDistance,
+                    mode: 'walk',
+                    steps: [{
+                        type: 'walk',
+                        from: origin,
+                        to: destination,
+                        distance: directDistance,
+                        time: walkTime,
+                        instruction: `Walk ${directDistance.toFixed(1)} miles to ${destination}`
+                    }]
+                };
+            }
+            
+            if (mode === 'bike') {
+                if (directDistance > 10) {
+                    return {
+                        type: 'suggestion',
+                        message: `Biking distance (${directDistance.toFixed(1)} miles) is quite far. Consider transit.`,
+                        suggestion: 'metro'
+                    };
+                }
+                
+                const bikeTime = Math.round(directDistance / SPEEDS.bike * 60);
+                return {
+                    type: 'route',
+                    totalTime: bikeTime,
+                    totalDistance: directDistance,
+                    mode: 'bike',
+                    steps: [{
+                        type: 'bike',
+                        from: origin,
+                        to: destination,
+                        distance: directDistance,
+                        time: bikeTime,
+                        instruction: `Bike ${directDistance.toFixed(1)} miles to ${destination}`
+                    }]
+                };
+            }
+            
+            if (mode === 'metro' || mode === 'bus') {
+                const originStop = findNearestStop(originCoords.lat, originCoords.lng, mode);
+                const destStop = findNearestStop(destCoords.lat, destCoords.lng, mode);
+                
+                if (!originStop || !destStop) {
+                    return {
+                        type: 'error',
+                        message: `No ${mode} stops found near your locations. Try walking or biking.`
+                    };
+                }
+                
+                const walkToStop = calculateDistance(originCoords.lat, originCoords.lng, originStop.lat, originStop.lng);
+                const walkFromStop = calculateDistance(destStop.lat, destStop.lng, destCoords.lat, destCoords.lng);
+                const transitDistance = calculateDistance(originStop.lat, originStop.lng, destStop.lat, destStop.lng);
+                
+                const walkToTime = Math.round(walkToStop / SPEEDS.walk * 60);
+                const transitTime = Math.round(transitDistance / SPEEDS[mode] * 60);
+                const walkFromTime = Math.round(walkFromStop / SPEEDS.walk * 60);
+                
+                const steps = [];
+                
+                // Walking to stop
+                if (walkToStop > 0.05) {
+                    steps.push({
+                        type: 'walk',
+                        from: origin,
+                        to: originStop.name,
+                        distance: walkToStop,
+                        time: walkToTime,
+                        instruction: `Walk ${walkToStop.toFixed(2)} miles to ${originStop.name}`
+                    });
+                }
+                
+                // Transit
+                steps.push({
+                    type: mode,
+                    from: originStop.name,
+                    to: destStop.name,
+                    distance: transitDistance,
+                    time: transitTime,
+                    instruction: `Take ${originStop.route.name} from ${originStop.name} to ${destStop.name}`,
+                    routeName: originStop.route.name
+                });
+                
+                // Walking from stop
+                if (walkFromStop > 0.05) {
+                    steps.push({
+                        type: 'walk',
+                        from: destStop.name,
+                        to: destination,
+                        distance: walkFromStop,
+                        time: walkFromTime,
+                        instruction: `Walk ${walkFromStop.toFixed(2)} miles to ${destination}`
+                    });
+                }
+                
+                const totalTime = steps.reduce((sum, step) => sum + step.time, 0);
+                const totalDistance = steps.reduce((sum, step) => sum + step.distance, 0);
+                
+                return {
+                    type: 'route',
+                    totalTime: totalTime,
+                    totalDistance: totalDistance,
+                    mode: mode,
+                    steps: steps
+                };
+            }
+            
+            return {
+                type: 'error',
+                message: 'Invalid transportation mode.'
+            };
+        }
+
+        // Toggle search panel
+        function toggleSearch() {
+            const searchPanel = document.getElementById('searchPanel');
+            if (searchPanel.style.display === 'none' || !searchPanel.style.display) {
+                searchPanel.style.display = 'flex';
+            } else {
+                searchPanel.style.display = 'none';
+            }
+        }
+
+        // Set transportation mode
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelector(`.mode-button[onclick="setMode('${mode}')"]`).classList.add('active');
+        }
+
+        // Get current location
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        try {
+                            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+                            const data = await response.json();
+                            
+                            const address = data.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                            
+                            currentLocation = {
+                                lat: lat,
+                                lng: lng,
+                                name: 'Current Location',
+                                address: address
+                            };
+                            
+                            document.getElementById('originInput').value = 'Current Location';
+                            alert(`✅ Current location set: ${address}`);
+                            
+                        } catch (error) {
+                            console.error('Error getting address:', error);
+                            currentLocation = {
+                                lat: lat,
+                                lng: lng,
+                                name: 'Current Location',
+                                address: `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+                            };
+                            document.getElementById('originInput').value = 'Current Location';
+                            alert('✅ Current location set (coordinates only)');
+                        }
+                    },
+                    function(error) {
+                        console.error('Geolocation error:', error);
+                        alert('❌ Could not get your location. Please enter address manually.');
+                    }
+                );
+            } else {
+                alert('❌ GPS not supported. Please enter address manually.');
+            }
+        }
+
+        // Handle search form submission
+        async function handleSearch(event) {
+            event.preventDefault();
+            
+            const origin = document.getElementById('originInput').value.trim();
+            const destination = document.getElementById('destinationInput').value.trim();
+            
+            if (!origin || !destination) {
+                alert('Please enter both origin and destination.');
+                return;
+            }
+            
+            const resultsContainer = document.getElementById('searchResults');
+            resultsContainer.innerHTML = '<div style="padding: 2rem; text-align: center; color: #666;">🔍 Finding routes...</div>';
+            resultsContainer.style.display = 'block';
+            
+            try {
+                const route = await planRoute(origin, destination, currentMode);
+                currentRoutes = [route];
+                displaySearchResults(currentRoutes);
+            } catch (error) {
+                console.error('Route planning error:', error);
+                resultsContainer.innerHTML = '<div style="padding: 2rem; text-align: center; color: #666;">❌ Error finding route. Please try again.</div>';
+            }
+        }
+
+        // Display search results
+        function displaySearchResults(routes) {
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (!routes || routes.length === 0) {
+                resultsContainer.innerHTML = '<div class="no-results">No routes found. Please try different locations or modes.</div>';
+                return;
+            }
+            
+            const html = routes.map((route, index) => {
+                if (route.type === 'error') {
+                    return `
+                        <div class="route-result" style="background-color: #f8d7da; border: 1px solid #f5c6cb;">
+                            <div class="route-header-result">
+                                <span style="color: #721c24;">❌ ${route.message}</span>
+                            </div>
+                        </div>
+                    `;
+                } else if (route.type === 'suggestion') {
+                    return `
+                        <div class="route-result" style="background-color: #fff3cd; border: 1px solid #ffeaa7;">
+                            <div class="route-header-result">
+                                <span style="color: #856404;">⚠️ ${route.message}</span>
+                            </div>
+                        </div>
+                    `;
+                } else if (route.type === 'route') {
+                    const modeIcon = getModeIcon(route.mode);
+                    const modeName = getModeName(route.mode);
+                    
+                    return `
+                        <div class="route-result" onclick="startNavigation(${index})" style="cursor: pointer;">
+                            <div class="route-header-result">
+                                <span style="font-size: 1.2rem;">${modeIcon}</span>
+                                <h3 class="route-name">${modeName} Route</h3>
+                            </div>
+                            <div class="route-details">
+                                <span>🕒 ${route.totalTime} min</span>
+                                <span>📍 ${route.totalDistance.toFixed(1)} miles</span>
+                            </div>
+                            <div class="journey-steps">
+                                ${route.steps.map(step => {
+                                    let stepHtml = `
+                                        <div class="journey-step">
+                                            <span>${getModeIcon(step.type)}</span>
+                                            <span>${step.instruction}</span>
+                                        </div>
+                                    `;
+                                    
+                                    // Add visual information for transit steps
+                                    if (step.type === 'metro' || step.type === 'bus') {
+                                        const stationVisuals = getStationVisualInfo(step.from);
+                                        stepHtml += `
+                                            <div class="visual-guide" style="margin: 0.5rem 0; padding: 0.75rem; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #007bff;">
+                                                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                                                    <div style="flex: 1;">
+                                                        <div class="platform-indicator" style="font-size: 0.8rem; padding: 0.25rem 0.75rem;">
+                                                            🚉 Platform ${stationVisuals.platform}
+                                                        </div>
+                                                        <div style="font-size: 0.8rem; color: #666; margin-top: 0.25rem;">
+                                                            📍 ${stationVisuals.entrance}
+                                                        </div>
+                                                    </div>
+                                                    <div style="flex-shrink: 0;">
+                                                        <img src="${stationVisuals.image}" alt="${step.from} Station" 
+                                                              style="width: 80px; height: 60px; border-radius: 4px; object-fit: cover; border: 1px solid #dee2e6;"
+                                                              onerror="this.src='${generatePlaceholderImage(step.from)}'">
+                                                    </div>
+                                                </div>
+                                                <div class="landmark-info" style="font-size: 0.75rem; padding: 0.25rem 0; background: #e3f2fd; border-radius: 4px; margin: 0;">
+                                                    🎯 Look for: ${stationVisuals.landmarks}
+                                                </div>
+                                            </div>
+                                        `;
+                                    }
+                                    
+                                    return stepHtml;
+                                }).join('')}
+                            </div>
+                            <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e0e0e0; text-align: center; color: #007bff; font-weight: 500;">
+                                🚀 Click to start navigation with live visual guidance
+                            </div>
+                            
+                            <!-- Amenities Section -->
+                            <div class="amenities-section" id="amenities-${index}" style="display: none;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <h6 style="margin: 0; color: #333;">🏪 Nearby Amenities</h6>
+                                    <button class="amenities-toggle" onclick="event.stopPropagation(); toggleAmenities(${index})" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">
+                                        Hide Amenities
+                                    </button>
+                                </div>
+                                
+                                <div class="amenities-filters">
+                                    <button class="amenity-filter active" onclick="event.stopPropagation(); filterAmenities(${index}, 'all')">
+                                        🏪 All
+                                    </button>
+                                    <button class="amenity-filter" onclick="event.stopPropagation(); filterAmenities(${index}, 'restaurants')">
+                                        🍽️ Food
+                                    </button>
+                                    <button class="amenity-filter" onclick="event.stopPropagation(); filterAmenities(${index}, 'restrooms')">
+                                        🚻 Restrooms
+                                    </button>
+                                    <button class="amenity-filter" onclick="event.stopPropagation(); filterAmenities(${index}, 'parking')">
+                                        🅿️ Parking
+                                    </button>
+                                    <button class="amenity-filter" onclick="event.stopPropagation(); filterAmenities(${index}, 'services')">
+                                        🏪 Services
+                                    </button>
+                                </div>
+                                
+                                <div class="amenities-list" id="amenities-list-${index}">
+                                    ${generateAmenitiesForRoute(route)}
+                                </div>
+                            </div>
+                            
+                            <button class="amenities-toggle" onclick="event.stopPropagation(); toggleAmenities(${index})">
+                                🏪 Show Nearby Amenities
+                            </button>
+                        </div>
+                    `;
+                }
+                return '';
+            }).join('');
+            
+            resultsContainer.innerHTML = html;
+        }
+
+        // Get mode icon
+        function getModeIcon(mode) {
+            const icons = {
+                walk: '🚶',
+                bike: '🚲',
+                metro: '🚇',
+                bus: '🚌'
+            };
+            return icons[mode] || '🚗';
+        }
+
+        // Get mode name
+        function getModeName(mode) {
+            const names = {
+                walk: 'Walk',
+                bike: 'Bike',
+                metro: 'Metro',
+                bus: 'Bus'
+            };
+            return names[mode] || 'Transit';
+        }
+
+        // Start navigation
+        function startNavigation(routeIndex) {
+            const route = currentRoutes[routeIndex];
+            if (!route || route.type !== 'route') {
+                alert('Invalid route selected');
+                return;
+            }
+            
+            isNavigating = true;
+            showNavigationView(route);
+        }
+
+        // Show navigation view
+        function showNavigationView(route) {
+            currentRoute = route;
+            currentStepIndex = 0;
+            stepStartTime = Date.now();
+            isNavigating = true;
+            
+            // Create navigation overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'navigation-overlay';
+            overlay.id = 'navigationOverlay';
+            
+            overlay.innerHTML = `
+                <div class="nav-header">
+                    <div>
+                        <h3 style="margin: 0;">🚗 Live Navigation</h3>
+                        <p style="margin: 0.25rem 0 0 0; opacity: 0.9;">
+                            ${route.steps[0].from} → ${route.steps[route.steps.length - 1].to}
+                        </p>
+                        <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.25rem;">
+                            📍 ${route.totalDistance.toFixed(1)} miles • 🕒 ${route.totalTime} min • ${getModeName(route.mode)}
+                        </div>
+                    </div>
+                    <button class="exit-btn" onclick="exitNavigation()">✕ Exit</button>
+                </div>
+                <div class="nav-content">
+                    <div class="nav-map-container" id="navMapContainer"></div>
+                    <div class="directions-panel">
+                        <div class="current-step" id="currentStep">
+                            <div class="step-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+                                </div>
+                                <div class="step-counter">Step <span id="stepNumber">1</span> of ${route.steps.length}</div>
+                            </div>
+                            <div class="current-instruction" id="currentInstruction">
+                                <h4>🚀 Starting Navigation...</h4>
+                                <p>Preparing your route...</p>
+                            </div>
+                            <div class="live-info" id="liveInfo">
+                                <div class="movement-status" id="movementStatus">
+                                    <span style="color: #666;">📍 Getting location...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="directions-list" id="directionsList">
+                            <h5 style="margin: 0 0 1rem 0; color: #333;">📋 Complete Journey</h5>
+                            ${route.steps.map((step, index) => `
+                                <div class="step-item ${index === 0 ? 'active' : ''}" id="step-${index}">
+                                    <div class="step-icon" style="background-color: ${getStepColor(step.type)};">
+                                        ${getModeIcon(step.type)}
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-instruction">${step.instruction}</div>
+                                        <div class="step-details">
+                                            ${step.distance.toFixed(2)} miles • ${step.time} min
+                                            ${step.type === 'metro' || step.type === 'bus' ? 
+                                                `<div class="transit-info" id="transit-${index}">🚇 Getting arrival times...</div>` : ''}
+                                        </div>
+                                        ${step.type === 'walk' || step.type === 'bike' ? `
+                                            <div class="turn-by-turn" id="directions-${index}">
+                                                ${generateTurnByTurnDirections(step)}
+                                            </div>
+                                        ` : ''}
+                                        ${step.type === 'metro' || step.type === 'bus' ? `
+                                            <div class="visual-guide" style="margin-top: 0.75rem; padding: 0.75rem; background: #f0f8ff; border-radius: 6px; border-left: 3px solid #007bff;">
+                                                ${generateStationVisualGuide(step.from)}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                            
+                            <div style="margin-top: 2rem; padding: 1rem; background: #e8f5e8; border-radius: 8px; border-left: 4px solid #28a745;">
+                                <h6 style="margin: 0 0 0.5rem 0; color: #155724;">🎯 Journey Summary</h6>
+                                <div style="font-size: 0.9rem; color: #155724;">
+                                    <div>📍 Total Distance: <strong>${route.totalDistance.toFixed(1)} miles</strong></div>
+                                    <div>🕒 Total Time: <strong>${route.totalTime} minutes</strong></div>
+                                    <div>🚗 Transport Mode: <strong>${getModeName(route.mode)}</strong></div>
+                                    <div>📊 Steps: <strong>${route.steps.length} segments</strong></div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 1rem; padding: 0.75rem; background: #fff3cd; border-radius: 6px; border-left: 3px solid #ffc107; text-align: center; font-size: 0.8rem; color: #856404;">
+                                📱 Scroll down to see all steps • Use Previous/Next buttons to navigate
+                            </div>
+                        </div>
+                        <div class="nav-controls">
+                            <button onclick="previousStep()" id="prevBtn" class="nav-btn" disabled>⬅️ Previous</button>
+                            <button onclick="nextStep()" id="nextBtn" class="nav-btn">Next ➡️</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(overlay);
+            
+            // Initialize navigation map and start live tracking
+            setTimeout(() => {
+                initNavigationMap(route);
+                startLiveNavigation();
+                updateNavigationDisplay();
+            }, 100);
+            
+            // Close search panel
+            toggleSearch();
+        }
+
+        // Initialize navigation map
+        function initNavigationMap(route) {
+            const navMap = L.map('navMapContainer').setView([34.0522, -118.2437], 12);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(navMap);
+            
+            // Add route markers
+            route.steps.forEach((step, index) => {
+                if (step.type === 'walk') {
+                    L.marker([locations[step.from.toLowerCase()]?.lat || 34.0522, locations[step.from.toLowerCase()]?.lng || -118.2437])
+                        .addTo(navMap)
+                        .bindPopup(step.instruction);
+                }
+            });
+            
+            window.navMap = navMap;
+        }
+
+        // Get step color
+        function getStepColor(type) {
+            const colors = {
+                walk: '#666',
+                bike: '#28a745',
+                metro: '#ee0000',
+                bus: '#ff6b35'
+            };
+            return colors[type] || '#666';
+        }
+
+        // Exit navigation
+        function exitNavigation() {
+            console.log('🛑 Exiting navigation...');
+            
+            // Stop all navigation tracking
+            isNavigating = false;
+            currentRoute = null;
+            currentStepIndex = 0;
+            
+            // Clear GPS tracking
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            
+            // Clear intervals
+            if (navigationInterval) {
+                clearInterval(navigationInterval);
+                navigationInterval = null;
+            }
+            
+            // Remove navigation overlay
+            const overlay = document.getElementById('navigationOverlay');
+            if (overlay) {
+                overlay.remove();
+            }
+            
+            // Clean up navigation map
+            if (window.navMap) {
+                window.navMap.remove();
+                window.navMap = null;
+            }
+            
+            if (window.currentLocationMarker) {
+                window.currentLocationMarker = null;
+            }
+            
+            console.log('✅ Navigation cleaned up successfully');
+        }
+
+        // Initialize app when page loads
+        window.onload = function() {
+            console.log('🚀 LA Transit App starting...');
+            
+            // Start the welcome screen experience
+            startWelcomeExperience();
+        };
+
+        // Welcome screen experience
+        function startWelcomeExperience() {
+            // Simulate loading progress - make it slower and more realistic
+            const progressBar = document.getElementById('loadingProgress');
+            const loadingText = document.getElementById('loadingText');
+            const getStartedSection = document.getElementById('getStartedSection');
+            const completionMessage = document.getElementById('completionMessage');
+            let progress = 0;
+            
+            const loadingInterval = setInterval(() => {
+                progress += Math.random() * 8 + 2; // Slower progress increment
+                
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(loadingInterval);
+                    
+                    // Show completion message and get started button
+                    setTimeout(() => {
+                        if (loadingText) {
+                            loadingText.style.display = 'none';
+                        }
+                        if (completionMessage) {
+                            completionMessage.style.display = 'block';
+                        }
+                        if (getStartedSection) {
+                            getStartedSection.style.display = 'block';
+                        }
+                        console.log('✅ Welcome screen ready - waiting for user action');
+                    }, 500);
+                } else {
+                    if (progressBar) {
+                        progressBar.style.width = `${progress}%`;
+                    }
+                }
+            }, 300); // Slower interval
+        }
+
+        // Hide welcome screen with animation
+        function hideWelcomeScreen() {
+            const welcomeScreen = document.getElementById('welcomeScreen');
+            if (welcomeScreen) {
+                welcomeScreen.classList.add('fade-out');
+                setTimeout(() => {
+                    welcomeScreen.style.display = 'none';
+                    console.log('✅ Welcome screen hidden');
+                }, 800);
+            }
+        }
+
+        // Quick search function for action buttons
+        function quickSearch(origin, destination) {
+            console.log(`🔍 Quick search: ${origin} → ${destination}`);
+            
+            try {
+                // Initialize map first if not already done
+                if (!window.map) {
+                    console.log('🗺️ Initializing map...');
+                    initMap();
+                }
+                
+                // Hide welcome screen
+                hideWelcomeScreen();
+                
+                // Wait for map to load then perform search
+                setTimeout(() => {
+                    console.log('📝 Setting search values...');
+                    
+                    try {
+                        // Set the search values
+                        const originInput = document.getElementById('originInput');
+                        const destinationInput = document.getElementById('destinationInput');
+                        
+                        if (originInput && destinationInput) {
+                            originInput.value = origin;
+                            destinationInput.value = destination;
+                            
+                            console.log(`✅ Set origin: ${originInput.value}, destination: ${destinationInput.value}`);
+                            
+                            // Open search panel
+                            console.log('🔍 Opening search panel...');
+                            toggleSearch();
+                            
+                            // Auto-perform the search after a short delay
+                            setTimeout(() => {
+                                console.log('🚀 Performing search...');
+                                const searchEvent = new Event('submit');
+                                handleSearch(searchEvent);
+                            }, 800);
+                        } else {
+                            console.error('❌ Could not find input elements');
+                            console.error('Origin input:', originInput);
+                            console.error('Destination input:', destinationInput);
+                            
+                            // Fallback: just open search panel
+                            toggleSearch();
+                        }
+                    } catch (searchError) {
+                        console.error('❌ Error during search setup:', searchError);
+                        // Fallback: just open search panel
+                        toggleSearch();
+                    }
+                }, 1200);
+                
+            } catch (error) {
+                console.error('❌ Error in quickSearch:', error);
+                
+                // Fallback: hide welcome screen and show map
+                hideWelcomeScreen();
+                if (!window.map) {
+                    initMap();
+                }
+            }
+        }
+
+        // Add some interactive features to stats cards
+        function initWelcomeInteractions() {
+            const statCards = document.querySelectorAll('.stat-card');
+            statCards.forEach((card, index) => {
+                card.addEventListener('click', () => {
+                    // Add a little celebration animation
+                    card.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        card.style.transform = 'translateY(-5px)';
+                    }, 150);
+                    
+                    // Show a tooltip or info based on the stat
+                    const tooltips = [
+                        '🚇 Red, Purple, Blue, Expo, Gold, and Green Lines serve LA with over 100 stations',
+                        '🚌 Extensive bus network covering all of Los Angeles County with 200+ routes',
+                        '📍 Metro Rail stations connecting major destinations across LA County',
+                        '⚡ Real-time data updates every 30 seconds for accurate arrival times'
+                    ];
+                    
+                    showTooltip(card, tooltips[index]);
+                });
+            });
+        }
+
+        // Show tooltip function
+        function showTooltip(element, text) {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.textContent = text;
+            tooltip.style.cssText = `
+                position: absolute;
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                padding: 0.75rem 1rem;
+                border-radius: 8px;
+                font-size: 0.85rem;
+                z-index: 10000;
+                pointer-events: none;
+                white-space: normal;
+                max-width: 250px;
+                min-width: 200px;
+                word-wrap: break-word;
+                line-height: 1.4;
+                transform: translateX(-50%);
+                top: -50px;
+                left: 50%;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            `;
+            
+            element.style.position = 'relative';
+            element.appendChild(tooltip);
+            
+            setTimeout(() => {
+                if (tooltip.parentNode) {
+                    tooltip.parentNode.removeChild(tooltip);
+                }
+            }, 3000);
+        }
+
+        // Call this when welcome screen loads
+        setTimeout(initWelcomeInteractions, 1000);
+
+        // Generate detailed turn-by-turn directions
+        function generateTurnByTurnDirections(step) {
+            if (step.type !== 'walk' && step.type !== 'bike') return '';
+            
+            const distance = step.distance;
+            const directions = [];
+            
+            if (distance <= 0.2) {
+                directions.push(`📍 Start from ${step.from}`);
+                directions.push(`🚶 Walk straight for ${(distance * 5280).toFixed(0)} feet`);
+                directions.push(`🎯 You will arrive at ${step.to}`);
+            } else if (distance <= 0.5) {
+                directions.push(`📍 Start from ${step.from}`);
+                directions.push(`🚶 Head ${getRandomDirection()} for ${(distance * 0.6 * 5280).toFixed(0)} feet`);
+                directions.push(`↩️ Turn ${getRandomTurn()} at the intersection`);
+                directions.push(`🚶 Continue for ${(distance * 0.4 * 5280).toFixed(0)} feet`);
+                directions.push(`🎯 You will arrive at ${step.to}`);
+            } else {
+                const segments = Math.min(Math.floor(distance / 0.3), 6);
+                directions.push(`📍 Start from ${step.from}`);
+                
+                for (let i = 0; i < segments; i++) {
+                    const segmentDistance = (distance / segments * 5280).toFixed(0);
+                    if (i === 0) {
+                        directions.push(`🚶 Head ${getRandomDirection()} for ${segmentDistance} feet`);
+                    } else {
+                        directions.push(`↩️ Turn ${getRandomTurn()} and continue for ${segmentDistance} feet`);
+                    }
+                }
+                
+                directions.push(`🎯 You will arrive at ${step.to}`);
+            }
+            
+            // Add safety tips
+            if (step.type === 'walk') {
+                directions.push(`⚠️ Stay on sidewalks and use crosswalks`);
+            } else if (step.type === 'bike') {
+                directions.push(`🚴 Use bike lanes when available`);
+                directions.push(`⚠️ Follow traffic signals and wear helmet`);
+            }
+            
+            return directions.map(dir => `<div class="direction-item">${dir}</div>`).join('');
+        }
+
+        function getRandomDirection() {
+            const directions = ['north', 'south', 'east', 'west', 'northeast', 'northwest', 'southeast', 'southwest'];
+            return directions[Math.floor(Math.random() * directions.length)];
+        }
+
+        function getRandomTurn() {
+            return Math.random() > 0.5 ? 'left' : 'right';
+        }
+
+        // Start live navigation with GPS tracking
+        function startLiveNavigation() {
+            console.log('🚀 Starting live navigation...');
+            
+            // Start GPS tracking
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const speed = position.coords.speed || 0;
+                        
+                        // Update movement status
+                        isMoving = speed > 0.5; // Moving if speed > 0.5 m/s
+                        
+                        // Update current location
+                        currentLocation = {
+                            lat: lat,
+                            lng: lng,
+                            accuracy: position.coords.accuracy,
+                            speed: speed
+                        };
+                        
+                        updateNavigationDisplay();
+                        updateMapPosition(lat, lng);
+                    },
+                    function(error) {
+                        console.log('GPS error:', error);
+                        // Fallback to simulated movement
+                        startSimulatedNavigation();
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 5000
+                    }
+                );
+            } else {
+                startSimulatedNavigation();
+            }
+            
+            // Update transit arrival times
+            updateTransitTimes();
+            
+            // Set up periodic updates
+            navigationInterval = setInterval(() => {
+                updateTransitTimes();
+                checkStepProgress();
+            }, 10000); // Update every 10 seconds
+        }
+
+        // Simulated navigation for demo
+        function startSimulatedNavigation() {
+            console.log('📱 Starting simulated navigation...');
+            let simulatedProgress = 0;
+            
+            const simulationInterval = setInterval(() => {
+                if (!isNavigating) {
+                    clearInterval(simulationInterval);
+                    return;
+                }
+                
+                simulatedProgress += Math.random() * 10; // Random progress
+                isMoving = Math.random() > 0.3; // 70% chance of moving
+                
+                updateNavigationDisplay();
+                
+                if (simulatedProgress >= 100) {
+                    clearInterval(simulationInterval);
+                }
+            }, 2000);
+        }
+
+        // Update navigation display with live information
+        function updateNavigationDisplay() {
+            if (!currentRoute || !isNavigating) return;
+            
+            const currentStep = currentRoute.steps[currentStepIndex];
+            const stepNumberEl = document.getElementById('stepNumber');
+            const currentInstructionEl = document.getElementById('currentInstruction');
+            const movementStatusEl = document.getElementById('movementStatus');
+            const progressFillEl = document.getElementById('progressFill');
+            
+            if (!currentStep || !stepNumberEl || !currentInstructionEl) return;
+            
+            // Update step number
+            stepNumberEl.textContent = currentStepIndex + 1;
+            
+            // Update progress bar
+            const progress = ((currentStepIndex + 1) / currentRoute.steps.length) * 100;
+            if (progressFillEl) {
+                progressFillEl.style.width = `${progress}%`;
+            }
+            
+            // Update current instruction
+            const stepIcon = getModeIcon(currentStep.type);
+            const stepColor = getStepColor(currentStep.type);
+            
+            currentInstructionEl.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: ${stepColor}; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                        ${stepIcon}
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; color: #333;">${currentStep.instruction}</h4>
+                        <p style="margin: 0.25rem 0 0 0; color: #666;">
+                            ${currentStep.distance.toFixed(2)} miles • ${currentStep.time} min
+                        </p>
+                    </div>
+                </div>
+                ${currentStep.type === 'metro' || currentStep.type === 'bus' ? generateLiveTransitInfo(currentStep) : ''}
+            `;
+            
+            // Update movement status
+            if (movementStatusEl) {
+                const statusText = isMoving ? 
+                    `🟢 Moving ${currentLocation?.speed ? `(${(currentLocation.speed * 2.237).toFixed(1)} mph)` : ''}` : 
+                    '🔴 Stopped';
+                
+                const locationText = currentLocation ? 
+                    `📍 GPS accuracy: ${currentLocation.accuracy?.toFixed(0)}m` : 
+                    '📍 Getting location...';
+                
+                movementStatusEl.innerHTML = `
+                    <div>${statusText}</div>
+                    <div style="font-size: 0.8rem; opacity: 0.8; margin-top: 0.25rem;">${locationText}</div>
+                `;
+            }
+            
+            // Highlight current step in list
+            document.querySelectorAll('.step-item').forEach((item, index) => {
+                if (index === currentStepIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+            
+            // Update navigation buttons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            if (prevBtn) prevBtn.disabled = currentStepIndex === 0;
+            if (nextBtn) nextBtn.disabled = currentStepIndex === currentRoute.steps.length - 1;
+        }
+
+        // Generate live transit information with visual guides
+        function generateLiveTransitInfo(step) {
+            if (step.type !== 'metro' && step.type !== 'bus') return '';
+            
+            const now = new Date();
+            const arrivalTimes = generateNextArrivals(step, now);
+            const stationVisuals = getStationVisualInfo(step.from);
+            
+            return `
+                <div class="live-transit-panel" style="background: #f0f8ff; padding: 1rem; border-radius: 8px; border-left: 4px solid #0066cc; margin-top: 1rem;">
+                    <h5 style="margin: 0 0 0.75rem 0; color: #0066cc;">
+                        🚇 Live Transit Information
+                        <span class="live-indicator">
+                            <span class="live-dot"></span>
+                            LIVE
+                        </span>
+                    </h5>
+                    
+                    <div class="visual-guide">
+                        <h6 style="margin: 0 0 0.5rem 0; color: #333;">📍 Where to Wait</h6>
+                        <div class="realtime-camera">
+                            <img src="${stationVisuals.image}" alt="${step.from} Station" class="station-image" 
+                                 onerror="this.src='${generatePlaceholderImage(step.from)}'">
+                            <div class="camera-overlay">
+                                <span class="live-dot"></span>
+                                LIVE CAM
+                            </div>
+                        </div>
+                        
+                        <div class="platform-indicator">
+                            🚉 Platform ${stationVisuals.platform} - ${step.routeName || 'Transit Route'}
+                        </div>
+                        
+                        <div class="entrance-info">
+                            <strong>🚪 Best Entrance:</strong> ${stationVisuals.entrance}<br>
+                            <strong>🎯 Look for:</strong> ${stationVisuals.landmarks}
+                        </div>
+                        
+                        <div class="visual-instructions">
+                            <strong>👀 Visual Cues:</strong><br>
+                            ${stationVisuals.visualCues.map(cue => `
+                                <div class="landmark-info">
+                                    <span>${cue.icon}</span>
+                                    <span>${cue.description}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="transit-details">
+                        <div class="route-info" style="margin-bottom: 0.75rem;">
+                            <strong>${step.routeName || 'Transit Route'}</strong>
+                            <div style="font-size: 0.9rem; color: #666;">
+                                From ${step.from} → ${step.to}
+                            </div>
+                        </div>
+                        <div class="arrival-times">
+                            <h6 style="margin: 0 0 0.5rem 0; color: #333;">⏰ Next Arrivals:</h6>
+                            ${arrivalTimes.map(arrival => `
+                                <div class="arrival-item" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; padding: 0.5rem; background: white; border-radius: 4px; border-left: 3px solid ${arrival.status === 'On Time' ? '#28a745' : arrival.status.includes('Delayed') ? '#dc3545' : '#ffc107'};">
+                                    <div>
+                                        <strong>${arrival.time}</strong>
+                                        <span style="font-size: 0.8rem; color: #666; margin-left: 0.5rem;">(${arrival.minutesFromNow} min)</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="color: ${arrival.status === 'On Time' ? '#28a745' : arrival.status.includes('Delayed') ? '#dc3545' : '#ffc107'}; font-weight: bold; font-size: 0.8rem;">
+                                            ${arrival.status}
+                                        </span>
+                                        <span style="font-size: 0.7rem; background: #f8f9fa; padding: 0.2rem 0.4rem; border-radius: 3px;">
+                                            ${arrival.crowding}
+                                        </span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="platform-info" style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e0e0e0;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.9rem;">
+                                <span>🚉 Platform: <strong>${stationVisuals.platform}</strong></span>
+                                <span>🚃 Cars: <strong>${step.type === 'metro' ? '6' : '1'}</strong></span>
+                                <span>♿ Accessible: <strong>Yes</strong></span>
+                            </div>
+                            <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #666;">
+                                📡 Real-time data • 📷 Live camera • Last updated: ${now.toLocaleTimeString()}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Generate realistic arrival times with crowding info
+        function generateNextArrivals(step, now) {
+            const arrivals = [];
+            const baseInterval = step.type === 'metro' ? 6 : 12; // Metro every 6 min, bus every 12 min
+            const crowdingLevels = ['🟢 Light', '🟡 Moderate', '🔴 Crowded', '⚫ Very Full'];
+            
+            for (let i = 0; i < 3; i++) {
+                const minutesFromNow = Math.random() * 2 + (i * baseInterval) + Math.random() * 4;
+                const arrivalTime = new Date(now.getTime() + minutesFromNow * 60000);
+                const delay = Math.random() * 6 - 2; // -2 to +4 minutes
+                
+                let status = 'On Time';
+                if (delay > 2) status = `Delayed ${Math.floor(delay)} min`;
+                else if (delay < -1) status = `Early ${Math.abs(Math.floor(delay))} min`;
+                
+                // Rush hour = more crowded
+                const isRushHour = (now.getHours() >= 7 && now.getHours() <= 9) || (now.getHours() >= 17 && now.getHours() <= 19);
+                const crowdingIndex = isRushHour ? Math.floor(Math.random() * 4) : Math.floor(Math.random() * 3);
+                
+                arrivals.push({
+                    time: arrivalTime.toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit',
+                        hour12: true 
+                    }),
+                    status: status,
+                    minutesFromNow: Math.floor(minutesFromNow),
+                    crowding: crowdingLevels[crowdingIndex]
+                });
+            }
+            
+            return arrivals.sort((a, b) => a.minutesFromNow - b.minutesFromNow);
+        }
+
+        // Get station visual information
+        function getStationVisualInfo(stationName) {
+            const stationData = {
+                // Downtown Stations
+                '7th Street/Metro Center': {
+                    platform: 'B',
+                    entrance: 'Hope Street Entrance (North Side)',
+                    landmarks: 'Wells Fargo Center, US Bank Tower',
+                    image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400&h=300&fit=crop',
+                    visualCues: [
+                        { icon: '🏢', description: 'Large glass towers surrounding entrance' },
+                        { icon: '🚇', description: 'Red/Purple Line platform on Level B2' },
+                        { icon: '🎯', description: 'Blue metro signs with white arrows' },
+                        { icon: '🚪', description: 'Glass doors with "Metro" branding' }
+                    ]
+                },
+                'Union Station': {
+                    platform: 'A',
+                    entrance: 'Main Terminal Entrance',
+                    landmarks: 'Historic Union Station Building, Clock Tower',
+                    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
+                    visualCues: [
+                        { icon: '🏛️', description: 'Spanish Colonial Revival architecture' },
+                        { icon: '🕐', description: 'Large clock tower visible from street' },
+                        { icon: '🚂', description: 'Train departure boards in main hall' },
+                        { icon: '🎫', description: 'Metro ticket machines near platform entrance' }
+                    ]
+                },
+                'Hollywood/Highland': {
+                    platform: 'C',
+                    entrance: 'Highland Avenue Entrance',
+                    landmarks: 'TCL Chinese Theatre, Hollywood Walk of Fame',
+                    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
+                    visualCues: [
+                        { icon: '🌟', description: 'Hollywood Walk of Fame stars on sidewalk' },
+                        { icon: '🎬', description: 'TCL Chinese Theatre handprints nearby' },
+                        { icon: '🚇', description: 'Red Line platform underground' },
+                        { icon: '🎭', description: 'Hollywood-themed station artwork' }
+                    ]
+                },
+                'Jefferson/USC': {
+                    platform: 'A',
+                    entrance: 'Jefferson Boulevard Entrance',
+                    landmarks: 'USC Campus, Tommy Trojan Statue',
+                    image: 'https://images.unsplash.com/photo-1562774053-701939374585?w=400&h=300&fit=crop',
+                    visualCues: [
+                        { icon: '🏫', description: 'USC campus buildings across street' },
+                        { icon: '🏛️', description: 'Tommy Trojan statue visible from platform' },
+                        { icon: '🚇', description: 'Expo Line platform at street level' },
+                        { icon: '🎓', description: 'University signage and student activity' }
+                    ]
+                },
+                'Santa Monica': {
+                    platform: 'A',
+                    entrance: 'Colorado Avenue Entrance',
+                    landmarks: 'Santa Monica Pier, Beach, Third Street Promenade',
+                    image: 'https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=400&h=300&fit=crop',
+                    visualCues: [
+                        { icon: '🌊', description: 'Ocean breeze and salt air' },
+                        { icon: '🎡', description: 'Santa Monica Pier Ferris wheel visible' },
+                        { icon: '🏖️', description: 'Beach and palm trees nearby' },
+                        { icon: '🚇', description: 'End-of-line terminus station' }
+                    ]
+                }
+            };
+
+            // Return station data or generic fallback
+            return stationData[stationName] || {
+                platform: String.fromCharCode(65 + Math.floor(Math.random() * 4)), // A, B, C, or D
+                entrance: 'Main Entrance',
+                landmarks: 'Local businesses and street signs',
+                image: `https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400&h=300&fit=crop&t=${Date.now()}`,
+                visualCues: [
+                    { icon: '🚇', description: 'Blue and white Metro signage' },
+                    { icon: '🎯', description: 'Platform direction arrows' },
+                    { icon: '🚪', description: 'Station entrance with accessibility ramp' },
+                    { icon: '📍', description: 'Station name clearly displayed' }
+                ]
+            };
+        }
+
+        // Generate placeholder image for stations without photos
+        function generatePlaceholderImage(stationName) {
+            // Return a simple placeholder image URL instead of base64 SVG
+            return `https://via.placeholder.com/400x300/667eea/ffffff?text=${encodeURIComponent(stationName + ' Station')}`;
+        }
+
+        // Update transit arrival times
+        function updateTransitTimes() {
+            if (!currentRoute) return;
+            
+            currentRoute.steps.forEach((step, index) => {
+                if (step.type === 'metro' || step.type === 'bus') {
+                    const transitInfoEl = document.getElementById(`transit-${index}`);
+                    if (transitInfoEl) {
+                        const now = new Date();
+                        const nextArrival = generateNextArrivals(step, now)[0];
+                        transitInfoEl.innerHTML = `
+                            🚇 Next: ${nextArrival.time} (${nextArrival.status})
+                        `;
+                    }
+                }
+            });
+        }
+
+        // Navigation step controls
+        function nextStep() {
+            if (currentStepIndex < currentRoute.steps.length - 1) {
+                currentStepIndex++;
+                stepStartTime = Date.now();
+                updateNavigationDisplay();
+                
+                if (currentStepIndex === currentRoute.steps.length - 1) {
+                    showNavigationComplete();
+                }
+            }
+        }
+
+        function previousStep() {
+            if (currentStepIndex > 0) {
+                currentStepIndex--;
+                stepStartTime = Date.now();
+                updateNavigationDisplay();
+            }
+        }
+
+        // Check if user should move to next step (auto-advance)
+        function checkStepProgress() {
+            if (!currentRoute || !isMoving) return;
+            
+            const currentStep = currentRoute.steps[currentStepIndex];
+            const elapsedTime = (Date.now() - stepStartTime) / 1000 / 60; // minutes
+            
+            // Auto-advance if step time is nearly complete and user is moving
+            if (elapsedTime >= currentStep.time * 0.8) {
+                nextStep();
+            }
+        }
+
+        // Show navigation completion
+        function showNavigationComplete() {
+            const currentInstructionEl = document.getElementById('currentInstruction');
+            if (currentInstructionEl) {
+                currentInstructionEl.innerHTML = `
+                    <div style="text-align: center; padding: 2rem;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
+                        <h3 style="margin: 0 0 0.5rem 0; color: #28a745;">Navigation Complete!</h3>
+                        <p style="margin: 0; color: #666;">You have arrived at your destination.</p>
+                        <button onclick="exitNavigation()" style="margin-top: 1rem; padding: 0.75rem 1.5rem; background: #28a745; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                            ✅ Finish Navigation
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Update map position during navigation
+        function updateMapPosition(lat, lng) {
+            if (window.navMap && lat && lng) {
+                window.navMap.setView([lat, lng], 16);
+                
+                // Update current location marker
+                if (window.currentLocationMarker) {
+                    window.navMap.removeLayer(window.currentLocationMarker);
+                }
+                
+                window.currentLocationMarker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'current-location-marker',
+                        html: '<div style="background: #007bff; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"></div>',
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    })
+                }).addTo(window.navMap);
+            }
+        }
+
+        // Proceed to map function
+        function proceedToMap() {
+            console.log('🗺️ User chose to proceed to map');
+            
+            // Initialize map
+            initMap();
+            
+            // Hide welcome screen
+            hideWelcomeScreen();
+        }
+
+        // Amenities Functions
+        function generateAmenitiesForRoute(route) {
+            if (!route || !route.steps) return '<p style="text-align: center; color: #666;">No amenities found for this route.</p>';
+            
+            console.log('🔍 Generating amenities for route:', route);
+            console.log('🏪 Available amenities data:', amenitiesData);
+            
+            // Get all coordinates from route steps
+            const routePoints = route.steps.map(step => {
+                const fromCoords = getCoordinatesForLocation(step.from);
+                const toCoords = getCoordinatesForLocation(step.to);
+                console.log(`📍 Step: ${step.from} → ${step.to}`, { fromCoords, toCoords });
+                return [fromCoords, toCoords];
+            }).flat().filter(coord => coord);
+            
+            console.log('🗺️ Route points found:', routePoints);
+            
+            if (routePoints.length === 0) {
+                console.log('❌ No route coordinates found!');
+                return '<p style="text-align: center; color: #666;">No route coordinates available.</p>';
+            }
+            
+            // Find nearby amenities (within 2 miles of any route point - increased for testing)
+            const nearbyAmenities = [];
+            const maxDistance = 2.0; // miles - increased from 0.5 for better coverage
+            
+            Object.entries(amenitiesData).forEach(([category, amenities]) => {
+                console.log(`🔍 Checking ${category} amenities:`, amenities.length);
+                amenities.forEach(amenity => {
+                    console.log(`📍 Checking amenity: ${amenity.name} at (${amenity.lat}, ${amenity.lng})`);
+                    let minDistance = Infinity;
+                    routePoints.forEach(point => {
+                        if (point && point.lat && point.lng) {
+                            const distance = calculateDistance(point.lat, point.lng, amenity.lat, amenity.lng);
+                            console.log(`📏 Distance from ${point.lat},${point.lng} to ${amenity.name}: ${distance.toFixed(4)} miles`);
+                            minDistance = Math.min(minDistance, distance);
+                        } else {
+                            console.log(`❌ Invalid point:`, point);
+                        }
+                    });
+                    
+                    console.log(`📏 ${amenity.name} - Min distance: ${minDistance.toFixed(3)} miles`);
+                    
+                    if (minDistance !== Infinity && minDistance <= maxDistance) {
+                        console.log(`✅ Adding ${amenity.name} - distance: ${minDistance.toFixed(3)} miles`);
+                        nearbyAmenities.push({
+                            ...amenity,
+                            category: category,
+                            distance: minDistance
+                        });
+                    } else {
+                        console.log(`❌ Skipping ${amenity.name} - distance: ${minDistance.toFixed(3)} miles (too far or invalid)`);
+                    }
+                });
+            });
+            
+            console.log('🏪 Nearby amenities found:', nearbyAmenities);
+            
+            // Sort by distance
+            nearbyAmenities.sort((a, b) => a.distance - b.distance);
+            
+            if (nearbyAmenities.length === 0) {
+                return '<p style="text-align: center; color: #666;">No amenities found within 2 miles of your route.</p>';
+            }
+            
+            return nearbyAmenities.map(amenity => generateAmenityItem(amenity)).join('');
+        }
+
+        function generateAmenityItem(amenity) {
+            const iconData = getAmenityIcon(amenity.category, amenity.type);
+            
+            return `
+                <div class="amenity-item" data-category="${amenity.category}" onclick="event.stopPropagation(); showAmenityDetails('${amenity.name}')">
+                    <div class="amenity-icon" style="background: ${iconData.color};">
+                        ${iconData.icon}
+                    </div>
+                    <div class="amenity-info">
+                        <div class="amenity-name">${amenity.name}</div>
+                        <div class="amenity-details">
+                            <div>📍 ${(amenity.distance * 5280).toFixed(0)} ft away • 🚶 ${amenity.walkTime || Math.ceil(amenity.distance * 20)} min walk</div>
+                            <div>🕒 ${amenity.hours}</div>
+                            ${amenity.rating ? `<div>⭐ ${amenity.rating}/5 ${amenity.price ? `• ${amenity.price}` : ''}</div>` : ''}
+                            ${amenity.accessible ? '<div>♿ Wheelchair accessible</div>' : ''}
+                            ${amenity.rate ? `<div>💰 ${amenity.rate}</div>` : ''}
+                            ${amenity.spaces ? `<div>🅿️ ${amenity.spaces} spaces</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="amenity-distance">
+                        ${(amenity.distance * 5280).toFixed(0)} ft
+                    </div>
+                </div>
+            `;
+        }
+
+        function getAmenityIcon(category, type) {
+            const icons = {
+                restaurants: { icon: '🍽️', color: '#ff6b35' },
+                restrooms: { icon: '🚻', color: '#007bff' },
+                parking: { icon: '🅿️', color: '#28a745' },
+                services: { icon: '🏪', color: '#6f42c1' }
+            };
+            
+            // Specific type overrides
+            const typeIcons = {
+                coffee: { icon: '☕', color: '#8b4513' },
+                pharmacy: { icon: '💊', color: '#dc3545' },
+                atm: { icon: '💰', color: '#ffc107' },
+                gym: { icon: '💪', color: '#fd7e14' },
+                fast_food: { icon: '🍔', color: '#e83e8c' }
+            };
+            
+            return typeIcons[type] || icons[category] || { icon: '📍', color: '#6c757d' };
+        }
+
+        function getCoordinatesForLocation(locationName) {
+            console.log(`🔍 Looking for coordinates for: "${locationName}"`);
+            
+            // Try to get coordinates from locations data
+            const lowerName = locationName.toLowerCase().trim();
+            if (locations[lowerName]) {
+                console.log(`✅ Found in locations:`, locations[lowerName]);
+                return { lat: locations[lowerName].lat, lng: locations[lowerName].lng };
+            }
+            
+            // Try partial matches in locations
+            for (const [key, location] of Object.entries(locations)) {
+                if (key.includes(lowerName) || lowerName.includes(key)) {
+                    console.log(`✅ Found partial match in locations:`, location);
+                    return { lat: location.lat, lng: location.lng };
+                }
+            }
+            
+            // Try to match transit stations
+            for (const [lineKey, line] of Object.entries(transitSystem.metro)) {
+                const station = line.stations.find(s => 
+                    s.name.toLowerCase().includes(lowerName) || 
+                    lowerName.includes(s.name.toLowerCase()) ||
+                    s.name.toLowerCase() === lowerName
+                );
+                if (station) {
+                    console.log(`✅ Found in transit stations:`, station);
+                    return { lat: station.lat, lng: station.lng };
+                }
+            }
+            
+            // Try bus stops
+            for (const [routeKey, route] of Object.entries(transitSystem.bus)) {
+                const stop = route.stops.find(s => 
+                    s.name.toLowerCase().includes(lowerName) || 
+                    lowerName.includes(s.name.toLowerCase()) ||
+                    s.name.toLowerCase() === lowerName
+                );
+                if (stop) {
+                    console.log(`✅ Found in bus stops:`, stop);
+                    return { lat: stop.lat, lng: stop.lng };
+                }
+            }
+            
+            console.log(`❌ No coordinates found for: "${locationName}"`);
+            return null;
+        }
+
+        function toggleAmenities(routeIndex) {
+            const amenitiesSection = document.getElementById(`amenities-${routeIndex}`);
+            const toggleButtons = document.querySelectorAll(`[onclick="toggleAmenities(${routeIndex})"]`);
+            
+            if (amenitiesSection) {
+                if (amenitiesSection.style.display === 'none') {
+                    amenitiesSection.style.display = 'block';
+                    toggleButtons.forEach(btn => {
+                        if (btn.textContent.includes('Show')) {
+                            btn.style.display = 'none';
+                        }
+                    });
+                } else {
+                    amenitiesSection.style.display = 'none';
+                    toggleButtons.forEach(btn => {
+                        if (btn.textContent.includes('Show')) {
+                            btn.style.display = 'flex';
+                        }
+                    });
+                }
+            }
+        }
+
+        function filterAmenities(routeIndex, category) {
+            const amenitiesSection = document.getElementById(`amenities-${routeIndex}`);
+            const amenitiesList = document.getElementById(`amenities-list-${routeIndex}`);
+            const filterButtons = amenitiesSection.querySelectorAll('.amenity-filter');
+            
+            // Update active filter
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Find and activate the clicked button
+            filterButtons.forEach(btn => {
+                if (btn.textContent.includes(category === 'all' ? 'All' : 
+                    category === 'restaurants' ? 'Food' :
+                    category === 'restrooms' ? 'Restrooms' :
+                    category === 'parking' ? 'Parking' : 'Services')) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Show/hide amenities
+            const amenityItems = amenitiesList.querySelectorAll('.amenity-item');
+            amenityItems.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function showAmenityDetails(amenityName) {
+            // Find the amenity in our data
+            let foundAmenity = null;
+            Object.values(amenitiesData).forEach(category => {
+                const amenity = category.find(a => a.name === amenityName);
+                if (amenity) foundAmenity = amenity;
+            });
+            
+            if (foundAmenity) {
+                alert(`📍 ${foundAmenity.name}\n\n🕒 Hours: ${foundAmenity.hours}\n${foundAmenity.rating ? `⭐ Rating: ${foundAmenity.rating}/5\n` : ''}${foundAmenity.price ? `💰 Price: ${foundAmenity.price}\n` : ''}${foundAmenity.rate ? `💰 Rate: ${foundAmenity.rate}\n` : ''}${foundAmenity.accessible ? '♿ Wheelchair accessible\n' : ''}\n🚶 Walking time: ${foundAmenity.walkTime || 'Unknown'} minutes`);
+            }
+        }
+
+        function generateStationVisualGuide(stationName) {
+            const stationVisuals = getStationVisualInfo(stationName);
+            
+            return `
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="flex-shrink: 0;">
+                        <img src="${stationVisuals.image}" alt="${stationName} Station" 
+                             style="width: 60px; height: 45px; border-radius: 4px; object-fit: cover; border: 1px solid #dee2e6;"
+                             onerror="this.src='${generatePlaceholderImage(stationName)}'">
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: bold; margin-bottom: 0.25rem; color: #333;">📍 ${stationName}</div>
+                        <div style="font-size: 0.8rem; color: #666;">
+                            <div>🚉 Platform ${stationVisuals.platform} • 🚪 ${stationVisuals.entrance}</div>
+                            <div style="margin-top: 0.25rem;">🎯 ${stationVisuals.landmarks}</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 0.5rem; font-size: 0.75rem;">
+                    <strong>👀 Look for:</strong>
+                    ${stationVisuals.visualCues.slice(0, 2).map(cue => `
+                        <span style="display: inline-block; margin: 0.25rem 0.5rem 0.25rem 0; padding: 0.2rem 0.4rem; background: #e3f2fd; border-radius: 3px;">
+                            ${cue.icon} ${cue.description}
+                        </span>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Test function to verify amenities data
+        function testAmenitiesData() {
+            console.log('🧪 Testing amenities data...');
+            console.log('🏪 Amenities data structure:', amenitiesData);
+            
+            // Test a simple distance calculation
+            const testDistance = calculateDistance(34.0522, -118.2437, 34.0195, -118.4912);
+            console.log('📏 Test distance (Downtown to Santa Monica):', testDistance.toFixed(4), 'miles');
+            
+            // Test coordinate resolution
+            const downtownCoords = getCoordinatesForLocation('Downtown');
+            console.log('📍 Downtown coordinates:', downtownCoords);
+            
+            const uscCoords = getCoordinatesForLocation('USC');
+            console.log('📍 USC coordinates:', uscCoords);
+            
+            // Test amenities data
+            Object.entries(amenitiesData).forEach(([category, amenities]) => {
+                console.log(`🏪 ${category}: ${amenities.length} items`);
+                amenities.slice(0, 2).forEach(amenity => {
+                    console.log(`  - ${amenity.name}: (${amenity.lat}, ${amenity.lng})`);
+                });
+            });
+        }
+
+        // Call test function when page loads
+        window.addEventListener('load', () => {
+            setTimeout(testAmenitiesData, 2000);
+        });
+
+        // LA Slideshow Functions
+        function initLASlideshow() {
+            const slides = document.querySelectorAll('.slide');
+            const indicators = document.querySelectorAll('.indicator');
+            let currentSlide = 0;
+            
+            function showSlide(index) {
+                // Hide all slides
+                slides.forEach(slide => slide.classList.remove('active'));
+                indicators.forEach(indicator => indicator.classList.remove('active'));
+                
+                // Show current slide
+                slides[index].classList.add('active');
+                indicators[index].classList.add('active');
+            }
+            
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % slides.length;
+                showSlide(currentSlide);
+            }
+            
+            // Auto-advance slides every 4 seconds
+            setInterval(nextSlide, 4000);
+            
+            // Add click handlers to indicators
+            indicators.forEach((indicator, index) => {
+                indicator.addEventListener('click', () => {
+                    currentSlide = index;
+                    showSlide(currentSlide);
+                });
+            });
+            
+            // Add hover pause functionality
+            const slideshow = document.getElementById('laSlideshow');
+            let isPaused = false;
+            
+            slideshow.addEventListener('mouseenter', () => {
+                isPaused = true;
+            });
+            
+            slideshow.addEventListener('mouseleave', () => {
+                isPaused = false;
+            });
+            
+            // Pause/resume auto-advance
+            setInterval(() => {
+                if (!isPaused) {
+                    nextSlide();
+                }
+            }, 4000);
+        }
+
+        // Enhanced LA Slideshow Functions
+        function initEnhancedLASlideshow() {
+            const slides = document.querySelectorAll('.slide');
+            const indicators = document.querySelectorAll('.indicator');
+            let currentSlide = 0;
+            let slideInterval;
+            
+            function showSlide(index) {
+                // Hide all slides with fade out
+                slides.forEach(slide => {
+                    slide.style.opacity = '0';
+                    slide.classList.remove('active');
+                });
+                indicators.forEach(indicator => indicator.classList.remove('active'));
+                
+                // Show current slide with fade in
+                setTimeout(() => {
+                    slides[index].classList.add('active');
+                    slides[index].style.opacity = '1';
+                    indicators[index].classList.add('active');
+                }, 300);
+            }
+            
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % slides.length;
+                showSlide(currentSlide);
+            }
+            
+            function startAutoAdvance() {
+                slideInterval = setInterval(nextSlide, 3000); // Faster transitions - 3 seconds
+            }
+            
+            function stopAutoAdvance() {
+                if (slideInterval) {
+                    clearInterval(slideInterval);
+                }
+            }
+            
+            // Start auto-advance
+            startAutoAdvance();
+            
+            // Add click handlers to indicators
+            indicators.forEach((indicator, index) => {
+                indicator.addEventListener('click', () => {
+                    currentSlide = index;
+                    showSlide(currentSlide);
+                    // Restart auto-advance after manual click
+                    stopAutoAdvance();
+                    setTimeout(startAutoAdvance, 5000); // Resume after 5 seconds
+                });
+            });
+            
+            // Add hover pause functionality
+            const slideshow = document.getElementById('laSlideshow');
+            if (slideshow) {
+                slideshow.addEventListener('mouseenter', () => {
+                    stopAutoAdvance();
+                });
+                
+                slideshow.addEventListener('mouseleave', () => {
+                    startAutoAdvance();
+                });
+            }
+            
+            // Add keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+                    showSlide(currentSlide);
+                } else if (e.key === 'ArrowRight') {
+                    currentSlide = (currentSlide + 1) % slides.length;
+                    showSlide(currentSlide);
+                }
+            });
+            
+            // Add touch/swipe support for mobile
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            slideshow.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+            
+            slideshow.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+            
+            function handleSwipe() {
+                const swipeThreshold = 50;
+                const diff = touchStartX - touchEndX;
+                
+                if (Math.abs(diff) > swipeThreshold) {
+                    if (diff > 0) {
+                        // Swipe left - next slide
+                        currentSlide = (currentSlide + 1) % slides.length;
+                    } else {
+                        // Swipe right - previous slide
+                        currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+                    }
+                    showSlide(currentSlide);
+                }
+            }
+        }
+
+        // Fast LA Slideshow Functions (No Indicators)
+        function initFastLASlideshow() {
+            const slides = document.querySelectorAll('.slide');
+            let currentSlide = 0;
+            let slideInterval;
+            
+            function showSlide(index) {
+                // Hide all slides
+                slides.forEach(slide => {
+                    slide.classList.remove('active');
+                    slide.style.opacity = '0';
+                    slide.style.zIndex = '1';
+                });
+                
+                // Show current slide
+                slides[index].classList.add('active');
+                slides[index].style.opacity = '1';
+                slides[index].style.zIndex = '2';
+            }
+            
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % slides.length;
+                showSlide(currentSlide);
+            }
+            
+            function startAutoAdvance() {
+                slideInterval = setInterval(nextSlide, 3000); // Faster - 3 seconds
+            }
+            
+            function stopAutoAdvance() {
+                if (slideInterval) {
+                    clearInterval(slideInterval);
+                }
+            }
+            
+            // Start auto-advance
+            startAutoAdvance();
+            
+            // Add hover pause functionality
+            const slideshow = document.getElementById('laSlideshow');
+            if (slideshow) {
+                slideshow.addEventListener('mouseenter', () => {
+                    stopAutoAdvance();
+                });
+                
+                slideshow.addEventListener('mouseleave', () => {
+                    startAutoAdvance();
+                });
+            }
+        }
+
+        // Live Weather Functions
+        function initLiveWeather() {
+            updateWeatherDisplay();
+            startWeatherUpdates();
+        }
+
+        function updateWeatherDisplay() {
+            const weatherContainer = document.getElementById('weatherContainer');
+            if (!weatherContainer) return;
+
+            const weatherData = [
+                {
+                    temp: '72°F',
+                    feels: '74°F',
+                    icon: '☀️',
+                    condition: 'Sunny',
+                    humidity: '45%',
+                    wind: '8 mph',
+                    uv: 'High',
+                    time: 'Now'
+                },
+                {
+                    temp: '68°F',
+                    feels: '70°F',
+                    icon: '⛅',
+                    condition: 'Partly Cloudy',
+                    humidity: '52%',
+                    wind: '6 mph',
+                    uv: 'Medium',
+                    time: '2 PM'
+                },
+                {
+                    temp: '75°F',
+                    feels: '77°F',
+                    icon: '🌤️',
+                    condition: 'Mostly Sunny',
+                    humidity: '38%',
+                    wind: '10 mph',
+                    uv: 'Very High',
+                    time: '4 PM'
+                },
+                {
+                    temp: '70°F',
+                    feels: '72°F',
+                    icon: '🌅',
+                    condition: 'Clear',
+                    humidity: '48%',
+                    wind: '5 mph',
+                    uv: 'Low',
+                    time: '6 PM'
+                }
+            ];
+
+            let currentIndex = 0;
+            setInterval(() => {
+                const weather = weatherData[currentIndex];
+                
+                weatherContainer.innerHTML = `
+                    <div class="weather-main">
+                        <div class="weather-icon-large">${weather.icon}</div>
+                        <div class="weather-details">
+                            <div class="weather-temp-large">${weather.temp}</div>
+                            <div class="weather-condition">${weather.condition}</div>
+                            <div class="weather-feels">Feels like ${weather.feels}</div>
+                        </div>
+                    </div>
+                    <div class="weather-stats">
+                        <div class="weather-stat">
+                            <span class="stat-icon">💧</span>
+                            <span class="stat-label">Humidity</span>
+                            <span class="stat-value">${weather.humidity}</span>
+                        </div>
+                        <div class="weather-stat">
+                            <span class="stat-icon">💨</span>
+                            <span class="stat-label">Wind</span>
+                            <span class="stat-value">${weather.wind}</span>
+                        </div>
+                        <div class="weather-stat">
+                            <span class="stat-icon">☀️</span>
+                            <span class="stat-label">UV Index</span>
+                            <span class="stat-value">${weather.uv}</span>
+                        </div>
+                    </div>
+                    <div class="weather-time">Updated: ${weather.time}</div>
+                    
+                    <!-- <div class="weather-time">Updated: ${weather.time}</div> -->
+                `;
+
+                // Add animation
+                weatherContainer.style.animation = 'fadeIn 0.5s ease';
+                setTimeout(() => {
+                    weatherContainer.style.animation = '';
+                }, 500);
+                
+                currentIndex = (currentIndex + 1) % weatherData.length;
+            }, 8000); // Update every 8 seconds
+        }
+
+        function startWeatherUpdates() {
+            // Additional weather updates
+            setInterval(() => {
+                const weatherTime = document.querySelector('.weather-time');
+                if (weatherTime) {
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString('en-US', { 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: true 
+                    });
+                    weatherTime.textContent = `Updated: ${timeString}`;
+                }
+            }, 30000); // Update time every 30 seconds
+        }
+
+        // Initialize fixed slideshow and weather when page loads
+        window.addEventListener('load', () => {
+            // setTimeout(initFixedLASlideshow, 1000);
+            setTimeout(initLiveWeather, 1000);
+        });
+
+        // Initialize fast slideshow and weather when page loads
+        window.addEventListener('load', () => {
+            setTimeout(initFastLASlideshow, 1000);
+            setTimeout(initLiveWeather, 1000);
+        });
+
+        // Initialize only the fast slideshow and weather when page loads
+        window.addEventListener('load', () => {
+            setTimeout(initFastLASlideshow, 1000);
+            setTimeout(initLiveWeather, 1000);
+        });
+
+        // Initialize only the fast slideshow and weather when page loads
+        window.addEventListener('load', () => {
+            setTimeout(initFastLASlideshow, 1000);
+            setTimeout(initLiveWeather, 1000);
+        });
+
+        // Live Transit Dashboard Functions
+        function initLiveDashboard() {
+            updateTrainTimes();
+            updateStationFeed();
+            updateWeather();
+            startLiveUpdates();
+        }
+
+        function updateTrainTimes() {
+            const times = ['2-4 min', '3-5 min', '1-3 min', '4-6 min', '2-3 min'];
+            const nextTrainTime = document.getElementById('nextTrainTime');
+            if (nextTrainTime) {
+                let currentIndex = 0;
+                setInterval(() => {
+                    nextTrainTime.textContent = times[currentIndex];
+                    nextTrainTime.style.animation = 'pulse 0.5s ease';
+                    setTimeout(() => {
+                        nextTrainTime.style.animation = '';
+                    }, 500);
+                    currentIndex = (currentIndex + 1) % times.length;
+                }, 8000);
+            }
+        }
+
+        function updateStationFeed() {
+            const feedContainer = document.getElementById('stationFeed');
+            if (!feedContainer) return;
+
+            const feedItems = [
+                {
+                    icon: '🚊',
+                    title: 'Red Line - Hollywood',
+                    desc: 'Train arriving in 3 min',
+                    time: 'Just now'
+                },
+                {
+                    icon: '🚌',
+                    title: 'Rapid 720 - Downtown',
+                    desc: 'Bus running 2 min early',
+                    time: '1 min ago'
+                },
+                {
+                    icon: '🚇',
+                    title: 'Expo Line - USC',
+                    desc: 'Platform 2 - 5 min wait',
+                    time: '2 min ago'
+                },
+                {
+                    icon: '🚊',
+                    title: 'Blue Line - Long Beach',
+                    desc: 'Train delayed 3 min',
+                    time: '3 min ago'
+                },
+                {
+                    icon: '🚌',
+                    title: 'Local 33 - Venice',
+                    desc: 'Bus on time',
+                    time: '4 min ago'
+                }
+            ];
+
+            let currentIndex = 0;
+            setInterval(() => {
+                const newItem = feedItems[currentIndex];
+                const feedItem = document.createElement('div');
+                feedItem.className = 'feed-item';
+                feedItem.style.opacity = '0';
+                feedItem.style.transform = 'translateX(-20px)';
+                
+                feedItem.innerHTML = `
+                    <div class="feed-icon">${newItem.icon}</div>
+                    <div class="feed-content">
+                        <div class="feed-title">${newItem.title}</div>
+                        <div class="feed-desc">${newItem.desc}</div>
+                        <div class="feed-time">${newItem.time}</div>
+                    </div>
+                `;
+
+                feedContainer.insertBefore(feedItem, feedContainer.firstChild);
+                
+                // Animate in
+                setTimeout(() => {
+                    feedItem.style.transition = 'all 0.3s ease';
+                    feedItem.style.opacity = '1';
+                    feedItem.style.transform = 'translateX(0)';
+                }, 100);
+
+                // Remove old items (keep only 3)
+                const items = feedContainer.querySelectorAll('.feed-item');
+                if (items.length > 3) {
+                    const oldItem = items[items.length - 1];
+                    oldItem.style.transition = 'all 0.3s ease';
+                    oldItem.style.opacity = '0';
+                    oldItem.style.transform = 'translateX(20px)';
+                    setTimeout(() => {
+                        if (oldItem.parentNode) {
+                            oldItem.parentNode.removeChild(oldItem);
+                        }
+                    }, 300);
+                }
+
+                currentIndex = (currentIndex + 1) % feedItems.length;
+            }, 6000);
+        }
+
+        function updateWeather() {
+            const weatherTemp = document.querySelector('.weather-temp');
+            const weatherIcon = document.querySelector('.weather-icon');
+            const weatherDesc = document.querySelector('.weather-desc');
+            
+            if (!weatherTemp || !weatherIcon || !weatherDesc) return;
+
+            const weatherData = [
+                { temp: '72°F', icon: '☀️', desc: 'Perfect for walking!' },
+                { temp: '68°F', icon: '⛅', desc: 'Great transit weather' },
+                { temp: '75°F', icon: '🌤️', desc: 'Ideal for exploring' },
+                { temp: '70°F', icon: '☀️', desc: 'Beautiful LA day!' }
+            ];
+
+            let currentIndex = 0;
+            setInterval(() => {
+                const weather = weatherData[currentIndex];
+                weatherTemp.textContent = weather.temp;
+                weatherIcon.textContent = weather.icon;
+                weatherDesc.textContent = weather.desc;
+                
+                // Add animation
+                weatherTemp.style.animation = 'pulse 0.5s ease';
+                setTimeout(() => {
+                    weatherTemp.style.animation = '';
+                }, 500);
+                
+                currentIndex = (currentIndex + 1) % weatherData.length;
+            }, 12000);
+        }
+
+        function startLiveUpdates() {
+            // Update status every 30 seconds
+            setInterval(() => {
+                const statusIcon = document.querySelector('.status-icon');
+                if (statusIcon) {
+                    statusIcon.style.animation = 'pulse 1s ease';
+                    setTimeout(() => {
+                        statusIcon.style.animation = 'pulse 2s infinite';
+                    }, 1000);
+                }
+            }, 30000);
+        }
+
+        function showNearbyStations() {
+            if (currentLocation && currentLocation.lat && currentLocation.lng) {
+                // Find nearby stations
+                const nearbyStations = [];
+                
+                // Check metro stations
+                Object.keys(transitSystem.metro).forEach(lineKey => {
+                    const line = transitSystem.metro[lineKey];
+                    line.stations.forEach(station => {
+                        const distance = calculateDistance(
+                            currentLocation.lat, currentLocation.lng,
+                            station.lat, station.lng
+                        );
+                        if (distance <= 2) { // Within 2 miles
+                            nearbyStations.push({
+                                name: station.name,
+                                line: lineKey,
+                                distance: distance,
+                                type: 'metro'
+                            });
+                        }
+                    });
+                });
+
+                // Check bus stops
+                Object.keys(transitSystem.bus).forEach(routeKey => {
+                    const route = transitSystem.bus[routeKey];
+                    route.stops.forEach(stop => {
+                        const distance = calculateDistance(
+                            currentLocation.lat, currentLocation.lng,
+                            stop.lat, stop.lng
+                        );
+                        if (distance <= 1) { // Within 1 mile
+                            nearbyStations.push({
+                                name: stop.name,
+                                line: routeKey,
+                                distance: distance,
+                                type: 'bus'
+                            });
+                        }
+                    });
+                });
+
+                // Sort by distance
+                nearbyStations.sort((a, b) => a.distance - b.distance);
+
+                // Show results
+                if (nearbyStations.length > 0) {
+                    const message = `Nearby stations from your location:\n\n` +
+                        nearbyStations.slice(0, 5).map(station => 
+                            `${station.type === 'metro' ? '🚇' : '🚌'} ${station.name} (${station.line})\n${station.distance.toFixed(1)} miles away`
+                        ).join('\n\n');
+                    alert(message);
+                } else {
+                    alert('No transit stations found within 2 miles of your location.');
+                }
+            } else {
+                alert('Please set your current location first.');
+            }
+        }
+
+        // Initialize dashboard when page loads
+        window.addEventListener('load', () => {
+            setTimeout(initLiveDashboard, 1000);
+        });
+    </script>
+</body>
+</html> 
