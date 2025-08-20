@@ -99,10 +99,4 @@ This project is open source and available under the [MIT License](LICENSE).
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📞 Support
-
-If you have any questions or need help, please open an issue on GitHub.
-
----
-
-**Made with ❤️ for LA commuters** 
+ 
