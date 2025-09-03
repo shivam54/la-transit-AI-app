@@ -15,14 +15,14 @@ A comprehensive LA transit application with AI-powered chatbot, real-time naviga
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/la-transit-app-AI.git
-   cd la-transit-app-AI
+   git clone https://github.com/yourusername/la-transit-AI-app.git
+   cd la-transit-AI-app
    ```
 
 2. **Open the app**:
    - Navigate to `simple-version/` folder
    - Open `index-working-with-location-sharing.html` in your browser
-   - Or run a local server: `python -m http.server 8000`
+   - Or run a local server: `python -m http.server 8002`
 
 3. **Start using**:
    - Plan routes between any LA locations
@@ -36,7 +36,9 @@ A comprehensive LA transit application with AI-powered chatbot, real-time naviga
 - **Maps**: Leaflet.js with OpenStreetMap
 - **AI**: Hugging Face API (facebook/bart-large-mnli)
 - **Geolocation**: Browser GPS APIs
-- **Transit Data**: LA Metro, Metrolink, and Regional Services
+- **Transit Data**: Swifly, and Regional Services
+- **Traffic and Events Data**: TomTom
+  - **Weather Data**: WeatherMap
 
 ## 📁 Project Structure
 
@@ -77,19 +79,6 @@ la-transit-app/
 - Transit information
 - Bilingual conversations
 
-## ⚙️ Configuration
-
-### Hugging Face API
-To use the AI features, you'll need a Hugging Face API token:
-1. Go to [huggingface.co](https://huggingface.co)
-2. Create an account and get your API token
-3. Replace the token in `ai-features.js`
-
-### Transit APIs
-The app uses real LA transit data:
-- LA Metro API
-- Metrolink API
-- Regional Transit Network
 
 ## 📄 License
 
