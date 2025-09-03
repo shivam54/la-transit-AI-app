@@ -1,8 +1,8 @@
-# LA Transit App 🚇
+# LA Transit App 
 
 A comprehensive LA transit application with AI-powered chatbot, real-time navigation, and location sharing features.
 
-## 🌟 Features
+##  Features
 
 - **AI Chatbot**: Powered by Hugging Face models for intelligent route planning
 - **Real-time Navigation**: Step-by-step directions with landmarks and transit info
@@ -11,7 +11,7 @@ A comprehensive LA transit application with AI-powered chatbot, real-time naviga
 - **Bilingual Support**: English and Spanish interface
 - **GPS Integration**: Real-time location detection with accuracy indicators
 
-## 🚀 Quick Start
+##  Quick Start
 
 1. **Clone the repository**:
    ```bash
@@ -30,7 +30,7 @@ A comprehensive LA transit application with AI-powered chatbot, real-time naviga
    - Share your location with friends
    - Get real-time transit information
 
-## 🛠️ Technologies Used
+##  Technologies Used
 
 - **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
 - **Maps**: Leaflet.js with OpenStreetMap
@@ -40,7 +40,7 @@ A comprehensive LA transit application with AI-powered chatbot, real-time naviga
 - **Traffic and Events Data**: TomTom
   - **Weather Data**: WeatherMap
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 la-transit-app/
@@ -52,14 +52,14 @@ la-transit-app/
 └── ... (documentation files)
 ```
 
-## 🤖 AI Features
+##  AI Features
 
 - **Intent Classification**: Understands user queries in English and Spanish
 - **Smart Route Planning**: Suggests optimal routes based on preferences
 - **Natural Language Processing**: Conversational interface for transit queries
 - **Bilingual Support**: Full Spanish and English language support
 
-## 📱 Features
+##  Features
 
 ### Route Planning
 - Multi-modal transportation options
@@ -80,11 +80,11 @@ la-transit-app/
 - Bilingual conversations
 
 
-## 📄 License
+##  License
 
 This project is open source and available under the [MIT License](LICENSE).
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
