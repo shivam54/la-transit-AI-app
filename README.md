@@ -21,8 +21,10 @@ A comprehensive LA transit application with AI-powered chatbot, real-time naviga
 
 2. **Open the app**:
    - Navigate to `simple-version/` folder
-   - Open `index-working-with-location-sharing.html` in your browser
-   - Or run a local server: `python -m http.server 8002`
+   - From command prompt, run  `python comprehensive-server.py`
+   - Should see: Server running on http://localhost:8002
+   - Use http://localhost:8002/index-working-with-location-sharing.html
+   - Or directly open `index-working-with-location-sharing.html` in your browser
 
 3. **Start using**:
    - Plan routes between any LA locations
