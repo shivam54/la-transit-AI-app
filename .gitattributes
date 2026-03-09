@@ -1,0 +1,11 @@
+simple-version/*.html linguist-vendored
+
+# Highlight main code languages
+*.dart linguist-language=Dart
+*.js   linguist-language=JavaScript
+*.cjs  linguist-language=JavaScript
+*.mjs  linguist-language=JavaScript
+*.jsx  linguist-language=JavaScript
+*.ts   linguist-language=TypeScript
+*.tsx  linguist-language=TypeScript
+*.py   linguist-language=Python
