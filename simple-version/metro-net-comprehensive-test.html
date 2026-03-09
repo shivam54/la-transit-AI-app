@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metro.net API - Comprehensive Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+        .success {
+            border-left-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+        .info {
+            background: rgba(255, 193, 7, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #FFC107;
+        }
+        .warning {
+            background: rgba(244, 67, 54, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #f44336;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .api-key {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        .result {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .loading {
+            color: #FFD700;
+        }
+        .test-input {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            margin: 5px;
+            width: 300px;
+        }
+        .test-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .endpoint {
+            background: rgba(0, 150, 136, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #009688;
+            margin: 10px 0;
+        }
+        .custom-endpoint {
+            background: rgba(156, 39, 176, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #9C27B0;
+            margin: 10px 0;
+        }
+        .doc-link {
+            background: rgba(33, 150, 243, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+            margin: 10px 0;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .test-category {
+            background: rgba(255, 193, 7, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #FFC107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚇 Metro.net API - Comprehensive Test</h1>
+        
+        <div class="warning">
+            <h3>❌ 404 Error Detected</h3>
+            <p>The API endpoint <code>https://api.metro.net/agencies?key=be537b841d5f4a3800f2b1ac79e5a67e</code> returned 404 Not Found. Let's test different API structures to find the correct syntax.</p>
+        </div>
+
+        <div class="section">
+            <h3>🔑 Metro.net API Key</h3>
+            <div class="api-key">be537b841d5f4a3800f2b1ac79e5a67e</div>
+            <p>Status: 🔍 Testing different API structures</p>
+        </div>
+
+        <div class="section">
+            <h3>🧪 Test Different API Structures</h3>
+            
+            <div class="grid">
+                <div class="test-category">
+                    <h4>🔍 Structure 1: Standard REST</h4>
+                    <button onclick="testApiStructure('standard')">Test Standard REST</button>
+                    <p>Standard REST API structure</p>
+                </div>
+                
+                <div class="test-category">
+                    <h4>🔍 Structure 2: Versioned API</h4>
+                    <button onclick="testApiStructure('versioned')">Test Versioned API</button>
+                    <p>API with version numbers</p>
+                </div>
+                
+                <div class="test-category">
+                    <h4>🔍 Structure 3: Different Base URLs</h4>
+                    <button onclick="testApiStructure('baseurls')">Test Different Base URLs</button>
+                    <p>Alternative base URLs</p>
+                </div>
+                
+                <div class="test-category">
+                    <h4>🔍 Structure 4: Different Auth Methods</h4>
+                    <button onclick="testApiStructure('auth')">Test Different Auth</button>
+                    <p>Different authentication methods</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🧪 Test Specific Endpoints</h3>
+            
+            <div class="endpoint">
+                <h4>🚌 Test 1: Basic Agencies (Current)</h4>
+                <p><strong>URL:</strong> <code>https://api.metro.net/agencies?key={apiKey}</code></p>
+                <button onclick="testSpecificEndpoint('https://api.metro.net/agencies?key=be537b841d5f4a3800f2b1ac79e5a67e', 'Basic Agencies')">Test Current</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 Test 2: Versioned API</h4>
+                <p><strong>URL:</strong> <code>https://api.metro.net/v1/agencies?key={apiKey}</code></p>
+                <button onclick="testSpecificEndpoint('https://api.metro.net/v1/agencies?key=be537b841d5f4a3800f2b1ac79e5a67e', 'Versioned API v1')">Test v1</button>
+                <button onclick="testSpecificEndpoint('https://api.metro.net/v2/agencies?key=be537b841d5f4a3800f2b1ac79e5a67e', 'Versioned API v2')">Test v2</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 Test 3: Different Base URLs</h4>
+                <p><strong>URLs:</strong></p>
+                <button onclick="testSpecificEndpoint('https://metro.net/api/agencies?key=be537b841d5f4a3800f2b1ac79e5a67e', 'metro.net/api')">metro.net/api</button>
+                <button onclick="testSpecificEndpoint('https://www.metro.net/api/agencies?key=be537b841d5f4a3800f2b1ac79e5a67e', 'www.metro.net/api')">www.metro.net/api</button>
+                <button onclick="testSpecificEndpoint('https://api.metro.net/api/agencies?key=be537b841d5f4a3800f2b1ac79e5a67e', 'api.metro.net/api')">api.metro.net/api</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 Test 4: Different Auth Methods</h4>
+                <p><strong>Methods:</strong></p>
+                <button onclick="testSpecificEndpoint('https://api.metro.net/agencies?api_key=be537b841d5f4a3800f2b1ac79e5a67e', 'api_key parameter')">api_key parameter</button>
+                <button onclick="testSpecificEndpoint('https://api.metro.net/agencies?token=be537b841d5f4a3800f2b1ac79e5a67e', 'token parameter')">token parameter</button>
+                <button onclick="testSpecificEndpoint('https://api.metro.net/agencies?apikey=be537b841d5f4a3800f2b1ac79e5a67e', 'apikey parameter')">apikey parameter</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 Test 5: Different Endpoint Names</h4>
+                <p><strong>Endpoints:</strong></p>
+                <button onclick="testSpecificEndpoint('https://api.metro.net/agency?key=be537b841d5f4a3800f2b1ac79e5a67e', 'agency (singular)')">agency (singular)</button>
+                <button onclick="testSpecificEndpoint('https://api.metro.net/transit/agencies?key=be537b841d5f4a3800f2b1ac79e5a67e', 'transit/agencies')">transit/agencies</button>
+                <button onclick="testSpecificEndpoint('https://api.metro.net/data/agencies?key=be537b841d5f4a3800f2b1ac79e5a67e', 'data/agencies')">data/agencies</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 Test 6: LA Metro Specific</h4>
+                <p><strong>LA Metro Endpoints:</strong></p>
+                <button onclick="testSpecificEndpoint('https://api.metro.net/lametro?key=be537b841d5f4a3800f2b1ac79e5a67e', 'lametro root')">lametro root</button>
+                <button onclick="testSpecificEndpoint('https://api.metro.net/lametro/agencies?key=be537b841d5f4a3800f2b1ac79e5a67e', 'lametro/agencies')">lametro/agencies</button>
+                <button onclick="testSpecificEndpoint('https://api.metro.net/agencies/lametro?key=be537b841d5f4a3800f2b1ac79e5a67e', 'agencies/lametro')">agencies/lametro</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🔧 Custom URL Testing</h3>
+            
+            <div class="custom-endpoint">
+                <h4>📝 Enter Custom URL</h4>
+                <p>Test any Metro.net URL you think might work:</p>
+                <input type="text" id="customUrl" class="test-input" placeholder="Enter full URL to test">
+                <button onclick="testCustomUrl()">Test Custom URL</button>
+            </div>
+
+            <div class="custom-endpoint">
+                <h4>📝 Test from Documentation</h4>
+                <p>If you have specific URLs from the Metro.net documentation:</p>
+                <input type="text" id="docUrl" class="test-input" placeholder="Enter URL from documentation">
+                <button onclick="testDocUrl()">Test Documentation URL</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📚 API Documentation Reference</h3>
+            <div class="doc-link">
+                <h4>🔗 Official Metro.net API Documentation</h4>
+                <p><a href="https://api.metro.net/docs" target="_blank" style="color: #FFD700;">https://api.metro.net/docs</a></p>
+                <p>Please check the documentation for:</p>
+                <ul>
+                    <li>Correct base URL</li>
+                    <li>API version numbers</li>
+                    <li>Authentication method</li>
+                    <li>Endpoint structure</li>
+                    <li>Example URLs</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📊 Test Results</h3>
+            <div id="results"></div>
+        </div>
+
+        <div class="section">
+            <h3>🎯 Next Steps</h3>
+            <div class="success">
+                <h4>✅ Once We Find Working Endpoints</h4>
+                <p>We can integrate real Metro.net data into your app:</p>
+                <ul>
+                    <li><strong>Real-time transit data</strong> from Metro.net</li>
+                    <li><strong>Vehicle locations</strong> and arrival times</li>
+                    <li><strong>Route information</strong> and schedules</li>
+                    <li><strong>Stop details</strong> and predictions</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const METRO_API_KEY = 'be537b841d5f4a3800f2b1ac79e5a67e';
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            
+            results.innerHTML += `<div class="result ${className}">[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testSpecificEndpoint(url, description) {
+            log(`🔄 Testing ${description}...`, 'loading');
+            log(`📡 URL: ${url}`);
+            
+            try {
+                const response = await fetch(url);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ ${description} - SUCCESS!`, 'success');
+                    log(`📊 Response Preview: ${JSON.stringify(data, null, 2).substring(0, 800)}...`);
+                    
+                    // Show useful data summary
+                    if (data.agencies && data.agencies.length > 0) {
+                        log(`🏢 Found ${data.agencies.length} agencies`);
+                    }
+                    if (data.routes && data.routes.length > 0) {
+                        log(`🚌 Found ${data.routes.length} routes`);
+                    }
+                    if (data.stops && data.stops.length > 0) {
+                        log(`📍 Found ${data.stops.length} stops`);
+                    }
+                    if (data.vehicles && data.vehicles.length > 0) {
+                        log(`🚌 Found ${data.vehicles.length} vehicles`);
+                    }
+                    
+                    return data;
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ ${description} - FAILED! Status: ${response.status}`, 'error');
+                    log(`📄 Error: ${errorText}`, 'error');
+                    return null;
+                }
+            } catch (error) {
+                log(`❌ ${description} - ERROR: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        async function testApiStructure(structure) {
+            log(`🚀 Testing ${structure} API structure...`, 'loading');
+            
+            let endpoints = [];
+            
+            switch(structure) {
+                case 'standard':
+                    endpoints = [
+                        { url: `https://api.metro.net/agencies?key=${METRO_API_KEY}`, desc: 'Standard Agencies' },
+                        { url: `https://api.metro.net/routes?key=${METRO_API_KEY}`, desc: 'Standard Routes' },
+                        { url: `https://api.metro.net/stops?key=${METRO_API_KEY}`, desc: 'Standard Stops' }
+                    ];
+                    break;
+                case 'versioned':
+                    endpoints = [
+                        { url: `https://api.metro.net/v1/agencies?key=${METRO_API_KEY}`, desc: 'v1 Agencies' },
+                        { url: `https://api.metro.net/v2/agencies?key=${METRO_API_KEY}`, desc: 'v2 Agencies' },
+                        { url: `https://api.metro.net/api/v1/agencies?key=${METRO_API_KEY}`, desc: 'api/v1 Agencies' }
+                    ];
+                    break;
+                case 'baseurls':
+                    endpoints = [
+                        { url: `https://metro.net/api/agencies?key=${METRO_API_KEY}`, desc: 'metro.net/api' },
+                        { url: `https://www.metro.net/api/agencies?key=${METRO_API_KEY}`, desc: 'www.metro.net/api' },
+                        { url: `https://api.metro.net/api/agencies?key=${METRO_API_KEY}`, desc: 'api.metro.net/api' }
+                    ];
+                    break;
+                case 'auth':
+                    endpoints = [
+                        { url: `https://api.metro.net/agencies?api_key=${METRO_API_KEY}`, desc: 'api_key auth' },
+                        { url: `https://api.metro.net/agencies?token=${METRO_API_KEY}`, desc: 'token auth' },
+                        { url: `https://api.metro.net/agencies?apikey=${METRO_API_KEY}`, desc: 'apikey auth' }
+                    ];
+                    break;
+            }
+            
+            for (const endpoint of endpoints) {
+                await testSpecificEndpoint(endpoint.url, endpoint.desc);
+                await new Promise(resolve => setTimeout(resolve, 500)); // Wait 0.5 seconds between requests
+            }
+            
+            log(`🎉 ${structure} API structure tests completed!`, 'success');
+        }
+
+        async function testCustomUrl() {
+            const url = document.getElementById('customUrl').value.trim();
+            if (!url) {
+                log('❌ Please enter a custom URL', 'error');
+                return;
+            }
+            
+            await testSpecificEndpoint(url, `Custom URL: ${url}`);
+        }
+
+        async function testDocUrl() {
+            const url = document.getElementById('docUrl').value.trim();
+            if (!url) {
+                log('❌ Please enter a URL from documentation', 'error');
+                return;
+            }
+            
+            await testSpecificEndpoint(url, `Documentation URL: ${url}`);
+        }
+
+        // Auto-run basic test on page load
+        window.addEventListener('load', () => {
+            log('🚇 Metro.net API Comprehensive Test Started');
+            log(`🔑 Using Metro.net API Key: ${METRO_API_KEY.substring(0, 8)}...`);
+            log('🔍 Testing different API structures to find correct syntax...');
+            log('📚 Reference: https://api.metro.net/docs');
+        });
+    </script>
+</body>
+</html>

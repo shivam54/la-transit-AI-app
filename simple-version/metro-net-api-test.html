@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metro.net API - Official Documentation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+        .success {
+            border-left-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+        .info {
+            background: rgba(255, 193, 7, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #FFC107;
+        }
+        .warning {
+            background: rgba(244, 67, 54, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #f44336;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .api-key {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        .result {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .loading {
+            color: #FFD700;
+        }
+        .test-input {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            margin: 5px;
+            width: 300px;
+        }
+        .test-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .endpoint {
+            background: rgba(0, 150, 136, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #009688;
+            margin: 10px 0;
+        }
+        .custom-endpoint {
+            background: rgba(156, 39, 176, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #9C27B0;
+            margin: 10px 0;
+        }
+        .doc-link {
+            background: rgba(33, 150, 243, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚇 Metro.net API - Official Documentation Test</h1>
+        
+        <div class="info">
+            <h3>✅ Official API Documentation Found</h3>
+            <p>Using the official Metro.net API documentation from: <a href="https://api.metro.net/docs" target="_blank" style="color: #FFD700;">https://api.metro.net/docs</a></p>
+        </div>
+
+        <div class="section">
+            <h3>🔑 Metro.net API Key</h3>
+            <div class="api-key">be537b841d5f4a3800f2b1ac79e5a67e</div>
+            <p>Status: 🔍 Testing with official Metro.net endpoints</p>
+        </div>
+
+        <div class="section">
+            <h3>🧪 Test Official Metro.net Endpoints</h3>
+            
+            <div class="endpoint">
+                <h4>🚌 1. Agencies List</h4>
+                <p><strong>Endpoint:</strong> <code>https://api.metro.net/agencies?key={apiKey}</code></p>
+                <p>Get list of all transit agencies</p>
+                <button onclick="testEndpoint('agencies')">Test Agencies</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 2. Agency Details</h4>
+                <p><strong>Endpoint:</strong> <code>https://api.metro.net/agencies/{agencyId}?key={apiKey}</code></p>
+                <p>Get details for a specific agency</p>
+                <input type="text" id="agencyId" class="test-input" placeholder="Enter agency ID (e.g., lametro)">
+                <button onclick="testEndpoint('agency-details')">Test Agency Details</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 3. Routes for Agency</h4>
+                <p><strong>Endpoint:</strong> <code>https://api.metro.net/agencies/{agencyId}/routes?key={apiKey}</code></p>
+                <p>Get all routes for a specific agency</p>
+                <input type="text" id="agencyIdRoutes" class="test-input" placeholder="Enter agency ID (e.g., lametro)">
+                <button onclick="testEndpoint('agency-routes')">Test Agency Routes</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 4. Route Details</h4>
+                <p><strong>Endpoint:</strong> <code>https://api.metro.net/agencies/{agencyId}/routes/{routeId}?key={apiKey}</code></p>
+                <p>Get details for a specific route</p>
+                <input type="text" id="routeAgencyId" class="test-input" placeholder="Agency ID (e.g., lametro)">
+                <input type="text" id="routeId" class="test-input" placeholder="Route ID (e.g., 2)">
+                <button onclick="testEndpoint('route-details')">Test Route Details</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 5. Stops for Route</h4>
+                <p><strong>Endpoint:</strong> <code>https://api.metro.net/agencies/{agencyId}/routes/{routeId}/stops?key={apiKey}</code></p>
+                <p>Get all stops for a specific route</p>
+                <input type="text" id="stopsAgencyId" class="test-input" placeholder="Agency ID (e.g., lametro)">
+                <input type="text" id="stopsRouteId" class="test-input" placeholder="Route ID (e.g., 2)">
+                <button onclick="testEndpoint('route-stops')">Test Route Stops</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 6. Predictions for Stop</h4>
+                <p><strong>Endpoint:</strong> <code>https://api.metro.net/agencies/{agencyId}/stops/{stopId}/predictions?key={apiKey}</code></p>
+                <p>Get arrival predictions for a specific stop</p>
+                <input type="text" id="predAgencyId" class="test-input" placeholder="Agency ID (e.g., lametro)">
+                <input type="text" id="stopId" class="test-input" placeholder="Stop ID (e.g., 12345)">
+                <button onclick="testEndpoint('stop-predictions')">Test Stop Predictions</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 7. Vehicles for Route</h4>
+                <p><strong>Endpoint:</strong> <code>https://api.metro.net/agencies/{agencyId}/routes/{routeId}/vehicles?key={apiKey}</code></p>
+                <p>Get real-time vehicle locations for a route</p>
+                <input type="text" id="vehiclesAgencyId" class="test-input" placeholder="Agency ID (e.g., lametro)">
+                <input type="text" id="vehiclesRouteId" class="test-input" placeholder="Route ID (e.g., 2)">
+                <button onclick="testEndpoint('route-vehicles')">Test Route Vehicles</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 8. All Vehicles for Agency</h4>
+                <p><strong>Endpoint:</strong> <code>https://api.metro.net/agencies/{agencyId}/vehicles?key={apiKey}</code></p>
+                <p>Get all vehicles for an agency</p>
+                <input type="text" id="allVehiclesAgencyId" class="test-input" placeholder="Agency ID (e.g., lametro)">
+                <button onclick="testEndpoint('agency-vehicles')">Test Agency Vehicles</button>
+            </div>
+
+            <button onclick="testCommonEndpoints()" style="background: #2196F3; margin-top: 20px;">🧪 Test Common Endpoints</button>
+        </div>
+
+        <div class="section">
+            <h3>🔧 Custom Endpoint Testing</h3>
+            
+            <div class="custom-endpoint">
+                <h4>📝 Enter Custom Metro.net Endpoint</h4>
+                <p>Test any specific Metro.net endpoint from the documentation:</p>
+                <input type="text" id="customEndpoint" class="test-input" placeholder="Enter endpoint (e.g., /agencies/lametro/routes/2/stops)">
+                <button onclick="testCustomEndpoint()">Test Custom Endpoint</button>
+            </div>
+
+            <div class="custom-endpoint">
+                <h4>📝 Enter Full URL</h4>
+                <p>Or test a complete Metro.net URL:</p>
+                <input type="text" id="fullUrl" class="test-input" placeholder="Enter full URL with API key">
+                <button onclick="testFullUrl()">Test Full URL</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📚 API Documentation Reference</h3>
+            <div class="doc-link">
+                <h4>🔗 Official Metro.net API Documentation</h4>
+                <p><a href="https://api.metro.net/docs" target="_blank" style="color: #FFD700;">https://api.metro.net/docs</a></p>
+                <p>Reference this documentation for:</p>
+                <ul>
+                    <li>Complete endpoint list</li>
+                    <li>Parameter descriptions</li>
+                    <li>Response formats</li>
+                    <li>Authentication details</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📊 Test Results</h3>
+            <div id="results"></div>
+        </div>
+
+        <div class="section">
+            <h3>🎯 Integration Plan</h3>
+            <div class="success">
+                <h4>✅ Metro.net API Integration</h4>
+                <p>Once we find working endpoints, we can integrate them into your main app:</p>
+                <ul>
+                    <li><strong>Real-time vehicle locations</strong> from Metro.net</li>
+                    <li><strong>Arrival predictions</strong> for specific stops</li>
+                    <li><strong>Route information</strong> and schedules</li>
+                    <li><strong>Stop locations</strong> and details</li>
+                    <li><strong>Agency information</strong> and coverage</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const METRO_API_KEY = 'be537b841d5f4a3800f2b1ac79e5a67e';
+        const METRO_BASE_URL = 'https://api.metro.net';
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            
+            results.innerHTML += `<div class="result ${className}">[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testMetroEndpoint(endpoint, description) {
+            log(`🔄 Testing ${description}...`, 'loading');
+            
+            const url = `${METRO_BASE_URL}${endpoint}?key=${METRO_API_KEY}`;
+            log(`📡 URL: ${url}`);
+            
+            try {
+                const response = await fetch(url);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ ${description} - SUCCESS!`, 'success');
+                    log(`📊 Response Preview: ${JSON.stringify(data, null, 2).substring(0, 800)}...`);
+                    
+                    // Show useful data summary
+                    if (data.agencies && data.agencies.length > 0) {
+                        log(`🏢 Found ${data.agencies.length} agencies`);
+                    }
+                    if (data.routes && data.routes.length > 0) {
+                        log(`🚌 Found ${data.routes.length} routes`);
+                    }
+                    if (data.stops && data.stops.length > 0) {
+                        log(`📍 Found ${data.stops.length} stops`);
+                    }
+                    if (data.vehicles && data.vehicles.length > 0) {
+                        log(`🚌 Found ${data.vehicles.length} vehicles`);
+                    }
+                    if (data.predictions && data.predictions.length > 0) {
+                        log(`⏰ Found ${data.predictions.length} predictions`);
+                    }
+                    if (data.directions && data.directions.length > 0) {
+                        log(`🧭 Found ${data.directions.length} directions`);
+                    }
+                    
+                    return data;
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ ${description} - FAILED! Status: ${response.status}`, 'error');
+                    log(`📄 Error: ${errorText}`, 'error');
+                    return null;
+                }
+            } catch (error) {
+                log(`❌ ${description} - ERROR: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        function testEndpoint(type) {
+            switch(type) {
+                case 'agencies':
+                    testMetroEndpoint('/agencies', 'Metro.net Agencies');
+                    break;
+                case 'agency-details':
+                    const agencyId = document.getElementById('agencyId').value || 'lametro';
+                    testMetroEndpoint(`/agencies/${agencyId}`, `Agency Details for ${agencyId}`);
+                    break;
+                case 'agency-routes':
+                    const agencyIdRoutes = document.getElementById('agencyIdRoutes').value || 'lametro';
+                    testMetroEndpoint(`/agencies/${agencyIdRoutes}/routes`, `Routes for Agency ${agencyIdRoutes}`);
+                    break;
+                case 'route-details':
+                    const routeAgencyId = document.getElementById('routeAgencyId').value || 'lametro';
+                    const routeId = document.getElementById('routeId').value || '2';
+                    testMetroEndpoint(`/agencies/${routeAgencyId}/routes/${routeId}`, `Route Details for ${routeAgencyId} Route ${routeId}`);
+                    break;
+                case 'route-stops':
+                    const stopsAgencyId = document.getElementById('stopsAgencyId').value || 'lametro';
+                    const stopsRouteId = document.getElementById('stopsRouteId').value || '2';
+                    testMetroEndpoint(`/agencies/${stopsAgencyId}/routes/${stopsRouteId}/stops`, `Stops for ${stopsAgencyId} Route ${stopsRouteId}`);
+                    break;
+                case 'stop-predictions':
+                    const predAgencyId = document.getElementById('predAgencyId').value || 'lametro';
+                    const stopId = document.getElementById('stopId').value || '12345';
+                    testMetroEndpoint(`/agencies/${predAgencyId}/stops/${stopId}/predictions`, `Predictions for ${predAgencyId} Stop ${stopId}`);
+                    break;
+                case 'route-vehicles':
+                    const vehiclesAgencyId = document.getElementById('vehiclesAgencyId').value || 'lametro';
+                    const vehiclesRouteId = document.getElementById('vehiclesRouteId').value || '2';
+                    testMetroEndpoint(`/agencies/${vehiclesAgencyId}/routes/${vehiclesRouteId}/vehicles`, `Vehicles for ${vehiclesAgencyId} Route ${vehiclesRouteId}`);
+                    break;
+                case 'agency-vehicles':
+                    const allVehiclesAgencyId = document.getElementById('allVehiclesAgencyId').value || 'lametro';
+                    testMetroEndpoint(`/agencies/${allVehiclesAgencyId}/vehicles`, `All Vehicles for Agency ${allVehiclesAgencyId}`);
+                    break;
+            }
+        }
+
+        async function testCommonEndpoints() {
+            log('🚀 Testing common Metro.net endpoints...', 'loading');
+            
+            const endpoints = [
+                { path: '/agencies', description: 'Agencies List' },
+                { path: '/agencies/lametro', description: 'LA Metro Agency Details' },
+                { path: '/agencies/lametro/routes', description: 'LA Metro Routes' },
+                { path: '/agencies/lametro/routes/2', description: 'LA Metro Route 2 Details' },
+                { path: '/agencies/lametro/routes/2/stops', description: 'LA Metro Route 2 Stops' },
+                { path: '/agencies/lametro/vehicles', description: 'LA Metro All Vehicles' }
+            ];
+
+            for (const endpoint of endpoints) {
+                await testMetroEndpoint(endpoint.path, endpoint.description);
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between requests
+            }
+            
+            log('🎉 Common endpoint tests completed!', 'success');
+        }
+
+        async function testCustomEndpoint() {
+            const endpoint = document.getElementById('customEndpoint').value.trim();
+            if (!endpoint) {
+                log('❌ Please enter a custom endpoint', 'error');
+                return;
+            }
+            
+            const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+            await testMetroEndpoint(path, `Custom Endpoint: ${endpoint}`);
+        }
+
+        async function testFullUrl() {
+            const fullUrl = document.getElementById('fullUrl').value.trim();
+            if (!fullUrl) {
+                log('❌ Please enter a full URL', 'error');
+                return;
+            }
+            
+            log(`🔄 Testing full URL...`, 'loading');
+            log(`📡 URL: ${fullUrl}`);
+            
+            try {
+                const response = await fetch(fullUrl);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ Full URL - SUCCESS!`, 'success');
+                    log(`📊 Response Preview: ${JSON.stringify(data, null, 2).substring(0, 800)}...`);
+                    return data;
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Full URL - FAILED! Status: ${response.status}`, 'error');
+                    log(`📄 Error: ${errorText}`, 'error');
+                    return null;
+                }
+            } catch (error) {
+                log(`❌ Full URL - ERROR: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        // Auto-run basic test on page load
+        window.addEventListener('load', () => {
+            log('🚇 Metro.net API Test Started');
+            log(`🔑 Using Metro.net API Key: ${METRO_API_KEY.substring(0, 8)}...`);
+            log('📚 Using official API documentation from: https://api.metro.net/docs');
+            log('🏢 Testing Metro.net endpoints...');
+            testEndpoint('agencies');
+        });
+    </script>
+</body>
+</html>

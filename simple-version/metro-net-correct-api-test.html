@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metro.net API - Correct Structure Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+        .success {
+            border-left-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+        .info {
+            background: rgba(255, 193, 7, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #FFC107;
+        }
+        .warning {
+            background: rgba(244, 67, 54, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #f44336;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .api-key {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        .result {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .loading {
+            color: #FFD700;
+        }
+        .test-input {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            margin: 5px;
+            width: 200px;
+        }
+        .test-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .endpoint {
+            background: rgba(0, 150, 136, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #009688;
+            margin: 10px 0;
+        }
+        .custom-endpoint {
+            background: rgba(156, 39, 176, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #9C27B0;
+            margin: 10px 0;
+        }
+        .doc-link {
+            background: rgba(33, 150, 243, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+            margin: 10px 0;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .test-category {
+            background: rgba(255, 193, 7, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #FFC107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚇 Metro.net API - Correct Structure Test</h1>
+        
+        <div class="success">
+            <h3>✅ Correct API Structure Found!</h3>
+            <p>Based on the official documentation screenshots, the correct Metro.net API structure is:</p>
+            <div class="code-block">https://api.metro.net/{agency_id}/trip_detail/route_code/{route_code}</div>
+        </div>
+
+        <div class="section">
+            <h3>🔑 Metro.net API Key</h3>
+            <div class="api-key">be537b841d5f4a3800f2b1ac79e5a67e</div>
+            <p>Status: 🔍 Testing with correct API structure</p>
+        </div>
+
+        <div class="section">
+            <h3>🧪 Test Correct API Endpoints</h3>
+            
+            <div class="endpoint">
+                <h4>🚌 Test 1: Trip Detail by Route Code (From Screenshot)</h4>
+                <p><strong>URL:</strong> <code>https://api.metro.net/LACMTA_Rail/trip_detail/route_code/1234</code></p>
+                <p><strong>Parameters:</strong> <code>geojson=false&include_stop_time_updates=false</code></p>
+                <button onclick="testTripDetail()">Test Trip Detail</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 Test 2: Different Agency IDs</h4>
+                <p><strong>Agency IDs to test:</strong></p>
+                <button onclick="testAgency('LACMTA_Rail')">LACMTA_Rail</button>
+                <button onclick="testAgency('LACMTA_Bus')">LACMTA_Bus</button>
+                <button onclick="testAgency('lametro')">lametro</button>
+                <button onclick="testAgency('lametro-rail')">lametro-rail</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 Test 3: Different Route Codes</h4>
+                <p><strong>Route Codes to test:</strong></p>
+                <button onclick="testRouteCode('LACMTA_Rail', '1234')">Route 1234</button>
+                <button onclick="testRouteCode('LACMTA_Rail', '1')">Route 1</button>
+                <button onclick="testRouteCode('LACMTA_Rail', '2')">Route 2</button>
+                <button onclick="testRouteCode('LACMTA_Rail', '801')">Route 801</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 Test 4: Different Query Parameters</h4>
+                <p><strong>Parameter combinations:</strong></p>
+                <button onclick="testWithParams('LACMTA_Rail', '1234', 'geojson=true&include_stop_time_updates=true')">With GeoJSON & Updates</button>
+                <button onclick="testWithParams('LACMTA_Rail', '1234', 'geojson=true')">With GeoJSON only</button>
+                <button onclick="testWithParams('LACMTA_Rail', '1234', 'include_stop_time_updates=true')">With Updates only</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🔧 Custom Endpoint Testing</h3>
+            
+            <div class="custom-endpoint">
+                <h4>📝 Test Custom Trip Detail</h4>
+                <p>Test with your own agency_id and route_code:</p>
+                <input type="text" id="customAgencyId" class="test-input" placeholder="Agency ID (e.g., LACMTA_Rail)">
+                <input type="text" id="customRouteCode" class="test-input" placeholder="Route Code (e.g., 1234)">
+                <button onclick="testCustomTripDetail()">Test Custom Trip Detail</button>
+            </div>
+
+            <div class="custom-endpoint">
+                <h4>📝 Test Full URL</h4>
+                <p>Test any complete Metro.net URL:</p>
+                <input type="text" id="fullUrl" class="test-input" placeholder="Enter full URL to test" style="width: 400px;">
+                <button onclick="testFullUrl()">Test Full URL</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🔍 Authentication Testing</h3>
+            
+            <div class="endpoint">
+                <h4>🔐 Test Different Auth Methods</h4>
+                <p>Since the screenshot shows an "Authorize" button, let's test different authentication methods:</p>
+                <button onclick="testWithHeaders()">Test with Authorization Header</button>
+                <button onclick="testWithApiKeyHeader()">Test with X-API-Key Header</button>
+                <button onclick="testWithBearerToken()">Test with Bearer Token</button>
+                <button onclick="testWithoutAuth()">Test without Authentication</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📚 API Documentation Reference</h3>
+            <div class="doc-link">
+                <h4>🔗 Official Metro.net API Documentation</h4>
+                <p><a href="https://api.metro.net/docs" target="_blank" style="color: #FFD700;">https://api.metro.net/docs</a></p>
+                <p><strong>Correct Structure from Screenshots:</strong></p>
+                <ul>
+                    <li><strong>Base URL:</strong> https://api.metro.net</li>
+                    <li><strong>Endpoint:</strong> /{agency_id}/trip_detail/route_code/{route_code}</li>
+                    <li><strong>Example:</strong> /LACMTA_Rail/trip_detail/route_code/1234</li>
+                    <li><strong>Parameters:</strong> geojson, include_stop_time_updates</li>
+                    <li><strong>Headers:</strong> accept: application/json</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📊 Test Results</h3>
+            <div id="results"></div>
+        </div>
+
+        <div class="section">
+            <h3>🎯 Integration Plan</h3>
+            <div class="success">
+                <h4>✅ Once We Find Working Endpoints</h4>
+                <p>We can integrate real Metro.net data into your app:</p>
+                <ul>
+                    <li><strong>Trip details</strong> by route code</li>
+                    <li><strong>Real-time transit data</strong> from Metro.net</li>
+                    <li><strong>Route information</strong> and schedules</li>
+                    <li><strong>Stop details</strong> and predictions</li>
+                    <li><strong>GeoJSON data</strong> for mapping</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const METRO_API_KEY = 'be537b841d5f4a3800f2b1ac79e5a67e';
+        const METRO_BASE_URL = 'https://api.metro.net';
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            
+            results.innerHTML += `<div class="result ${className}">[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function testMetroEndpoint(url, description, headers = {}) {
+            log(`🔄 Testing ${description}...`, 'loading');
+            log(`📡 URL: ${url}`);
+            
+            const requestOptions = {
+                method: 'GET',
+                headers: {
+                    'accept': 'application/json',
+                    ...headers
+                }
+            };
+            
+            try {
+                const response = await fetch(url, requestOptions);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ ${description} - SUCCESS!`, 'success');
+                    log(`📊 Response Preview: ${JSON.stringify(data, null, 2).substring(0, 800)}...`);
+                    
+                    // Show useful data summary
+                    if (Array.isArray(data) && data.length > 0) {
+                        log(`📋 Found ${data.length} trip details`);
+                    } else if (Array.isArray(data) && data.length === 0) {
+                        log(`📋 Empty response (no data found for this route)`);
+                    }
+                    
+                    return data;
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ ${description} - FAILED! Status: ${response.status}`, 'error');
+                    log(`📄 Error: ${errorText}`, 'error');
+                    return null;
+                }
+            } catch (error) {
+                log(`❌ ${description} - ERROR: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        function testTripDetail() {
+            const url = `${METRO_BASE_URL}/LACMTA_Rail/trip_detail/route_code/1234?geojson=false&include_stop_time_updates=false`;
+            testMetroEndpoint(url, 'Trip Detail - LACMTA_Rail Route 1234');
+        }
+
+        function testAgency(agencyId) {
+            const url = `${METRO_BASE_URL}/${agencyId}/trip_detail/route_code/1234?geojson=false&include_stop_time_updates=false`;
+            testMetroEndpoint(url, `Trip Detail - ${agencyId} Route 1234`);
+        }
+
+        function testRouteCode(agencyId, routeCode) {
+            const url = `${METRO_BASE_URL}/${agencyId}/trip_detail/route_code/${routeCode}?geojson=false&include_stop_time_updates=false`;
+            testMetroEndpoint(url, `Trip Detail - ${agencyId} Route ${routeCode}`);
+        }
+
+        function testWithParams(agencyId, routeCode, params) {
+            const url = `${METRO_BASE_URL}/${agencyId}/trip_detail/route_code/${routeCode}?${params}`;
+            testMetroEndpoint(url, `Trip Detail - ${agencyId} Route ${routeCode} with params`);
+        }
+
+        function testCustomTripDetail() {
+            const agencyId = document.getElementById('customAgencyId').value.trim() || 'LACMTA_Rail';
+            const routeCode = document.getElementById('customRouteCode').value.trim() || '1234';
+            const url = `${METRO_BASE_URL}/${agencyId}/trip_detail/route_code/${routeCode}?geojson=false&include_stop_time_updates=false`;
+            testMetroEndpoint(url, `Custom Trip Detail - ${agencyId} Route ${routeCode}`);
+        }
+
+        function testFullUrl() {
+            const url = document.getElementById('fullUrl').value.trim();
+            if (!url) {
+                log('❌ Please enter a full URL', 'error');
+                return;
+            }
+            testMetroEndpoint(url, `Full URL: ${url}`);
+        }
+
+        // Authentication testing
+        function testWithHeaders() {
+            const url = `${METRO_BASE_URL}/LACMTA_Rail/trip_detail/route_code/1234?geojson=false&include_stop_time_updates=false`;
+            const headers = { 'Authorization': `Bearer ${METRO_API_KEY}` };
+            testMetroEndpoint(url, 'Trip Detail with Authorization Header', headers);
+        }
+
+        function testWithApiKeyHeader() {
+            const url = `${METRO_BASE_URL}/LACMTA_Rail/trip_detail/route_code/1234?geojson=false&include_stop_time_updates=false`;
+            const headers = { 'X-API-Key': METRO_API_KEY };
+            testMetroEndpoint(url, 'Trip Detail with X-API-Key Header', headers);
+        }
+
+        function testWithBearerToken() {
+            const url = `${METRO_BASE_URL}/LACMTA_Rail/trip_detail/route_code/1234?geojson=false&include_stop_time_updates=false`;
+            const headers = { 'Authorization': `Bearer ${METRO_API_KEY}` };
+            testMetroEndpoint(url, 'Trip Detail with Bearer Token', headers);
+        }
+
+        function testWithoutAuth() {
+            const url = `${METRO_BASE_URL}/LACMTA_Rail/trip_detail/route_code/1234?geojson=false&include_stop_time_updates=false`;
+            testMetroEndpoint(url, 'Trip Detail without Authentication');
+        }
+
+        // Auto-run basic test on page load
+        window.addEventListener('load', () => {
+            log('🚇 Metro.net API Correct Structure Test Started');
+            log(`🔑 Using Metro.net API Key: ${METRO_API_KEY.substring(0, 8)}...`);
+            log('📋 Testing correct API structure from documentation screenshots');
+            log('🎯 Testing: https://api.metro.net/{agency_id}/trip_detail/route_code/{route_code}');
+            testTripDetail();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LA Metro API Research</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .research-section {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        .info {
+            background: rgba(255, 193, 7, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #FFC107;
+        }
+        .warning {
+            background: rgba(244, 67, 54, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #f44336;
+        }
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        a {
+            color: #FFD700;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .api-key {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 LA Metro API Research</h1>
+        
+        <div class="research-section">
+            <h3>🔑 Your API Key</h3>
+            <div class="api-key">be537b841d5f4a3800f2b1ac79e5a67e</div>
+        </div>
+
+        <div class="info">
+            <h3>📋 Research Findings</h3>
+            <p>The 404 errors indicate the API endpoints I used were incorrect. Let me research the actual LA Metro API structure:</p>
+        </div>
+
+        <div class="research-section">
+            <h3>🌐 LA Metro API Documentation Sources</h3>
+            <button onclick="openMetroDeveloper()">Open Metro Developer Portal</button>
+            <button onclick="openMetroNet()">Open Metro.net</button>
+            <button onclick="openGTFSDocs()">Open GTFS Documentation</button>
+            <button onclick="openTransitLand()">Open TransitLand</button>
+        </div>
+
+        <div class="research-section">
+            <h3>🔍 Possible API Structures</h3>
+            <div class="info">
+                <h4>1. GTFS Real-Time Feeds</h4>
+                <p>LA Metro likely uses GTFS Real-Time format:</p>
+                <ul>
+                    <li><code>https://api.metro.net/gtfs/lametro/vehicle_positions</code></li>
+                    <li><code>https://api.metro.net/gtfs/lametro/trip_updates</code></li>
+                    <li><code>https://api.metro.net/gtfs/lametro/service_alerts</code></li>
+                </ul>
+            </div>
+            
+            <div class="info">
+                <h4>2. REST API Endpoints</h4>
+                <p>Alternative REST API structure:</p>
+                <ul>
+                    <li><code>https://api.metro.net/v1/agencies/lametro</code></li>
+                    <li><code>https://api.metro.net/v1/agencies/lametro/routes</code></li>
+                    <li><code>https://api.metro.net/v1/agencies/lametro/vehicles</code></li>
+                </ul>
+            </div>
+
+            <div class="info">
+                <h4>3. Third-Party APIs</h4>
+                <p>If direct Metro API doesn't work:</p>
+                <ul>
+                    <li><strong>TransitLand:</strong> <code>https://transit.land/api/v2/agencies/lametro</code></li>
+                    <li><strong>OpenMobilityData:</strong> <code>https://api.transport.land/v2/agencies/lametro</code></li>
+                    <li><strong>GTFS.org:</strong> Various GTFS feeds</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="warning">
+            <h3>⚠️ Important Notes</h3>
+            <ul>
+                <li>Your API key might be for a different service (not LA Metro)</li>
+                <li>LA Metro might not have a public API</li>
+                <li>The key might be for a third-party transit data provider</li>
+                <li>Some transit APIs require different authentication methods</li>
+            </ul>
+        </div>
+
+        <div class="success">
+            <h3>✅ Next Steps</h3>
+            <ol>
+                <li>Check the test results from the alternative endpoints</li>
+                <li>Research LA Metro's official developer documentation</li>
+                <li>Consider using a different transit data provider</li>
+                <li>If needed, we can implement with estimated data and upgrade later</li>
+            </ol>
+        </div>
+
+        <div class="research-section">
+            <h3>🎯 Alternative Solutions</h3>
+            <p>If LA Metro API doesn't work, we can:</p>
+            <ul>
+                <li><strong>Use estimated data</strong> (current system)</li>
+                <li><strong>Integrate with TransitLand API</strong> (free tier available)</li>
+                <li><strong>Use OpenMobilityData</strong> (open source transit data)</li>
+                <li><strong>Implement web scraping</strong> (not recommended, against ToS)</li>
+                <li><strong>Use Google Transit API</strong> (requires Google Maps API key)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function openMetroDeveloper() {
+            window.open('https://developer.metro.net/', '_blank');
+        }
+        
+        function openMetroNet() {
+            window.open('https://www.metro.net/developers/', '_blank');
+        }
+        
+        function openGTFSDocs() {
+            window.open('https://developers.google.com/transit/gtfs-realtime', '_blank');
+        }
+        
+        function openTransitLand() {
+            window.open('https://transit.land/', '_blank');
+        }
+    </script>
+</body>
+</html>

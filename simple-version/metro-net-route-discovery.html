@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metro.net API - Route Discovery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .section {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+        .success {
+            border-left-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+        .info {
+            background: rgba(255, 193, 7, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #FFC107;
+        }
+        .warning {
+            background: rgba(244, 67, 54, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #f44336;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .api-key {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        .result {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .loading {
+            color: #FFD700;
+        }
+        .endpoint {
+            background: rgba(0, 150, 136, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #009688;
+            margin: 10px 0;
+        }
+        .route-list {
+            background: rgba(76, 175, 80, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .route-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .route-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚇 Metro.net API - Route Discovery</h1>
+        
+        <div class="info">
+            <h3>🔍 Route Discovery Mission</h3>
+            <p>We need to find the available <strong>route codes</strong> for each agency to use with the trip detail endpoint.</p>
+            <p><strong>Known Agency IDs:</strong> LACMTA_Rail, LACMTA</p>
+            <p><strong>Goal:</strong> Find route codes to use in: <code>/{agency_id}/trip_detail/route_code/{route_code}</code></p>
+        </div>
+
+        <div class="section">
+            <h3>🔑 Metro.net API Key</h3>
+            <div class="api-key">be537b841d5f4a3800f2b1ac79e5a67e</div>
+            <p>Status: 🔍 Discovering available routes</p>
+        </div>
+
+        <div class="section">
+            <h3>🧪 Route Discovery Tests</h3>
+            
+            <div class="endpoint">
+                <h4>🚌 Test 1: Get All Routes for LACMTA_Rail</h4>
+                <p><strong>Possible endpoints to discover routes:</strong></p>
+                <button onclick="testRouteDiscovery('LACMTA_Rail', 'routes')">Test /routes</button>
+                <button onclick="testRouteDiscovery('LACMTA_Rail', 'route')">Test /route</button>
+                <button onclick="testRouteDiscovery('LACMTA_Rail', 'lines')">Test /lines</button>
+                <button onclick="testRouteDiscovery('LACMTA_Rail', 'services')">Test /services</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 Test 2: Get All Routes for LACMTA</h4>
+                <p><strong>Possible endpoints to discover routes:</strong></p>
+                <button onclick="testRouteDiscovery('LACMTA', 'routes')">Test /routes</button>
+                <button onclick="testRouteDiscovery('LACMTA', 'route')">Test /route</button>
+                <button onclick="testRouteDiscovery('LACMTA', 'lines')">Test /lines</button>
+                <button onclick="testRouteDiscovery('LACMTA', 'services')">Test /services</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 Test 3: Alternative Route Discovery Methods</h4>
+                <p><strong>Other possible endpoints:</strong></p>
+                <button onclick="testRouteDiscovery('LACMTA_Rail', 'schedules')">Test /schedules</button>
+                <button onclick="testRouteDiscovery('LACMTA_Rail', 'trips')">Test /trips</button>
+                <button onclick="testRouteDiscovery('LACMTA_Rail', 'stops')">Test /stops</button>
+                <button onclick="testRouteDiscovery('LACMTA_Rail', 'vehicles')">Test /vehicles</button>
+            </div>
+
+            <div class="endpoint">
+                <h4>🚌 Test 4: Common Route Codes (Known LA Metro Routes)</h4>
+                <p><strong>Testing known LA Metro route numbers:</strong></p>
+                <button onclick="testKnownRoutes('LACMTA_Rail')">Test Known Rail Routes</button>
+                <button onclick="testKnownRoutes('LACMTA')">Test Known Bus Routes</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🔧 Custom Route Discovery</h3>
+            
+            <div class="endpoint">
+                <h4>📝 Test Custom Route Discovery</h4>
+                <p>Test different endpoint patterns:</p>
+                <input type="text" id="customAgencyId" placeholder="Agency ID (e.g., LACMTA_Rail)" style="padding: 8px; margin: 5px; border-radius: 3px; border: none; width: 200px;">
+                <input type="text" id="customEndpoint" placeholder="Endpoint (e.g., routes)" style="padding: 8px; margin: 5px; border-radius: 3px; border: none; width: 150px;">
+                <button onclick="testCustomRouteDiscovery()">Test Custom Discovery</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📊 Discovered Routes</h3>
+            <div id="discoveredRoutes"></div>
+        </div>
+
+        <div class="section">
+            <h3>📊 Test Results</h3>
+            <div id="results"></div>
+        </div>
+
+        <div class="section">
+            <h3>🎯 Next Steps</h3>
+            <div class="success">
+                <h4>✅ Once We Find Route Codes</h4>
+                <p>We can use them with the trip detail endpoint:</p>
+                <ul>
+                    <li><strong>Test trip details</strong> for each discovered route</li>
+                    <li><strong>Get real-time data</strong> for active routes</li>
+                    <li><strong>Integrate into your app</strong> for live transit info</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const METRO_API_KEY = 'be537b841d5f4a3800f2b1ac79e5a67e';
+        const METRO_BASE_URL = 'https://api.metro.net';
+        const discoveredRoutes = {};
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            
+            results.innerHTML += `<div class="result ${className}">[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+        }
+
+        function updateDiscoveredRoutes(agencyId, routes) {
+            const container = document.getElementById('discoveredRoutes');
+            if (!discoveredRoutes[agencyId]) {
+                discoveredRoutes[agencyId] = [];
+            }
+            discoveredRoutes[agencyId] = [...new Set([...discoveredRoutes[agencyId], ...routes])];
+            
+            container.innerHTML = '';
+            Object.keys(discoveredRoutes).forEach(agency => {
+                if (discoveredRoutes[agency].length > 0) {
+                    const agencyDiv = document.createElement('div');
+                    agencyDiv.className = 'route-list';
+                    agencyDiv.innerHTML = `<h4>🚌 ${agency} Routes (${discoveredRoutes[agency].length} found):</h4>`;
+                    
+                    discoveredRoutes[agency].forEach(route => {
+                        const routeDiv = document.createElement('div');
+                        routeDiv.className = 'route-item';
+                        routeDiv.innerHTML = `<strong>Route ${route}</strong> - Click to test trip detail`;
+                        routeDiv.onclick = () => testTripDetail(agency, route);
+                        agencyDiv.appendChild(routeDiv);
+                    });
+                    
+                    container.appendChild(agencyDiv);
+                }
+            });
+        }
+
+        async function testRouteDiscovery(agencyId, endpoint) {
+            const url = `${METRO_BASE_URL}/${agencyId}/${endpoint}`;
+            log(`🔄 Testing ${agencyId}/${endpoint} for route discovery...`, 'loading');
+            log(`📡 URL: ${url}`);
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`✅ ${agencyId}/${endpoint} - SUCCESS!`, 'success');
+                    log(`📊 Response Preview: ${JSON.stringify(data, null, 2).substring(0, 800)}...`);
+                    
+                    // Try to extract route codes from the response
+                    const routes = extractRouteCodes(data);
+                    if (routes.length > 0) {
+                        log(`🎯 Found ${routes.length} route codes: ${routes.join(', ')}`, 'success');
+                        updateDiscoveredRoutes(agencyId, routes);
+                    } else {
+                        log(`📋 No route codes found in response structure`);
+                    }
+                    
+                    return data;
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ ${agencyId}/${endpoint} - FAILED! Status: ${response.status}`, 'error');
+                    log(`📄 Error: ${errorText}`, 'error');
+                    return null;
+                }
+            } catch (error) {
+                log(`❌ ${agencyId}/${endpoint} - ERROR: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        function extractRouteCodes(data) {
+            const routes = [];
+            
+            // Try different data structures
+            if (Array.isArray(data)) {
+                data.forEach(item => {
+                    if (item.route_id) routes.push(item.route_id);
+                    if (item.route_code) routes.push(item.route_code);
+                    if (item.id) routes.push(item.id);
+                    if (item.code) routes.push(item.code);
+                    if (item.name) routes.push(item.name);
+                });
+            } else if (data.routes && Array.isArray(data.routes)) {
+                data.routes.forEach(route => {
+                    if (route.route_id) routes.push(route.route_id);
+                    if (route.route_code) routes.push(route.route_code);
+                    if (route.id) routes.push(route.id);
+                    if (route.code) routes.push(route.code);
+                });
+            } else if (data.data && Array.isArray(data.data)) {
+                data.data.forEach(item => {
+                    if (item.route_id) routes.push(item.route_id);
+                    if (item.route_code) routes.push(item.route_code);
+                    if (item.id) routes.push(item.id);
+                    if (item.code) routes.push(item.code);
+                });
+            }
+            
+            return routes.filter(route => route && route.toString().length > 0);
+        }
+
+        function testKnownRoutes(agencyId) {
+            log(`🔄 Testing known routes for ${agencyId}...`, 'loading');
+            
+            // Known LA Metro route numbers
+            const knownRoutes = agencyId === 'LACMTA_Rail' ? 
+                ['801', '802', '803', '804', '805', '806', '807', '808', '809', '810', '811', '812', '813', '814', '815', '816', '817', '818', '819', '820'] : // Rail routes
+                ['1', '2', '4', '10', '14', '16', '18', '20', '28', '30', '33', '37', '40', '42', '45', '51', '55', '60', '66', '70', '76', '78', '81', '83', '84', '90', '92', '94', '96', '102', '105', '110', '111', '115', '117', '120', '125', '128', '130', '134', '150', '152', '155', '162', '164', '165', '166', '167', '169', '172', '175', '180', '181', '182', '183', '185', '190', '194', '200', '201', '204', '205', '206', '207', '210', '211', '212', '214', '215', '217', '218', '220', '221', '222', '224', '225', '230', '232', '233', '234', '235', '236', '237', '240', '242', '243', '244', '245', '246', '247', '251', '252', '254', '256', '260', '266', '267', '269', '270', '275', '278', '280', '285', '290', '292', '294', '296', '300', '302', '305', '310', '312', '316', '320', '322', '323', '325', '330', '333', '344', '345', '350', '352', '353', '354', '355', '356', '357', '358', '360', '362', '363', '364', '365', '370', '371', '372', '373', '374', '375', '378', '380', '384', '390', '394', '400', '401', '402', '403', '404', '405', '406', '407', '410', '411', '412', '413', '414', '415', '416', '417', '418', '419', '420', '421', '422', '423', '424', '425', '426', '427', '428', '429', '430', '431', '432', '433', '434', '435', '436', '437', '438', '439', '440', '441', '442', '443', '444', '445', '446', '447', '448', '449', '450', '451', '452', '453', '454', '455', '456', '457', '458', '459', '460', '461', '462', '463', '464', '465', '466', '467', '468', '469', '470', '471', '472', '473', '474', '475', '476', '477', '478', '479', '480', '481', '482', '483', '484', '485', '486', '487', '488', '489', '490', '491', '492', '493', '494', '495', '496', '497', '498', '499', '500', '501', '502', '503', '504', '505', '506', '507', '508', '509', '510', '511', '512', '513', '514', '515', '516', '517', '518', '519', '520', '521', '522', '523', '524', '525', '526', '527', '528', '529', '530', '531', '532', '533', '534', '535', '536', '537', '538', '539', '540', '541', '542', '543', '544', '545', '546', '547', '548', '549', '550', '551', '552', '553', '554', '555', '556', '557', '558', '559', '560', '561', '562', '563', '564', '565', '566', '567', '568', '569', '570', '571', '572', '573', '574', '575', '576', '577', '578', '579', '580', '581', '582', '583', '584', '585', '586', '587', '588', '589', '590', '591', '592', '593', '594', '595', '596', '597', '598', '599', '600', '601', '602', '603', '604', '605', '606', '607', '608', '609', '610', '611', '612', '613', '614', '615', '616', '617', '618', '619', '620', '621', '622', '623', '624', '625', '626', '627', '628', '629', '630', '631', '632', '633', '634', '635', '636', '637', '638', '639', '640', '641', '642', '643', '644', '645', '646', '647', '648', '649', '650', '651', '652', '653', '654', '655', '656', '657', '658', '659', '660', '661', '662', '663', '664', '665', '666', '667', '668', '669', '670', '671', '672', '673', '674', '675', '676', '677', '678', '679', '680', '681', '682', '683', '684', '685', '686', '687', '688', '689', '690', '691', '692', '693', '694', '695', '696', '697', '698', '699', '700', '701', '702', '703', '704', '705', '706', '707', '708', '709', '710', '711', '712', '713', '714', '715', '716', '717', '718', '719', '720', '721', '722', '723', '724', '725', '726', '727', '728', '729', '730', '731', '732', '733', '734', '735', '736', '737', '738', '739', '740', '741', '742', '743', '744', '745', '746', '747', '748', '749', '750', '751', '752', '753', '754', '755', '756', '757', '758', '759', '760', '761', '762', '763', '764', '765', '766', '767', '768', '769', '770', '771', '772', '773', '774', '775', '776', '777', '778', '779', '780', '781', '782', '783', '784', '785', '786', '787', '788', '789', '790', '791', '792', '793', '794', '795', '796', '797', '798', '799', '800']; // Bus routes
+            
+            // Test first 5 routes to avoid too many requests
+            const testRoutes = knownRoutes.slice(0, 5);
+            log(`🧪 Testing ${testRoutes.length} known routes: ${testRoutes.join(', ')}`);
+            
+            testRoutes.forEach(route => {
+                setTimeout(() => {
+                    testTripDetail(agencyId, route);
+                }, 1000); // Wait 1 second between requests
+            });
+        }
+
+        async function testTripDetail(agencyId, routeCode) {
+            const url = `${METRO_BASE_URL}/${agencyId}/trip_detail/route_code/${routeCode}?geojson=false&include_stop_time_updates=false`;
+            log(`🔄 Testing trip detail for ${agencyId} route ${routeCode}...`, 'loading');
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        log(`✅ ${agencyId} Route ${routeCode} - HAS DATA! (${data.length} trips)`, 'success');
+                        updateDiscoveredRoutes(agencyId, [routeCode]);
+                    } else {
+                        log(`📋 ${agencyId} Route ${routeCode} - No data (empty response)`);
+                    }
+                } else {
+                    log(`❌ ${agencyId} Route ${routeCode} - FAILED! Status: ${response.status}`);
+                }
+            } catch (error) {
+                log(`❌ ${agencyId} Route ${routeCode} - ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        function testCustomRouteDiscovery() {
+            const agencyId = document.getElementById('customAgencyId').value.trim() || 'LACMTA_Rail';
+            const endpoint = document.getElementById('customEndpoint').value.trim() || 'routes';
+            testRouteDiscovery(agencyId, endpoint);
+        }
+
+        // Auto-run basic discovery on page load
+        window.addEventListener('load', () => {
+            log('🚇 Metro.net API Route Discovery Started');
+            log(`🔑 Using Metro.net API Key: ${METRO_API_KEY.substring(0, 8)}...`);
+            log('🎯 Goal: Find route codes for trip detail endpoints');
+            log('🔍 Starting with common route discovery endpoints...');
+            
+            // Start with basic route discovery
+            setTimeout(() => testRouteDiscovery('LACMTA_Rail', 'routes'), 500);
+            setTimeout(() => testRouteDiscovery('LACMTA', 'routes'), 1000);
+        });
+    </script>
+</body>
+</html>

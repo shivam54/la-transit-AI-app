@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LA Transit App - Enhanced with Real Address Support</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="enhanced-routing.js"></script>
+    <script src="ai-features.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            color: #333;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            position: relative;
+        }
+
+        .search-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .suggestions {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .route-button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: transform 0.2s;
+        }
+
+        .route-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .route-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .route-results {
+            margin-top: 20px;
+        }
+
+        .route-option {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .route-option:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .route-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .route-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .route-mode {
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .route-duration {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .route-details {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .mode-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .mode-btn:hover {
+            border-color: #667eea;
+        }
+
+        .route-steps {
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .route-step {
+            padding: 10px;
+            border-left: 3px solid #667eea;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 0 6px 6px 0;
+        }
+
+        .step-instruction {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .step-details {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .chat-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            max-height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            font-weight: 600;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 250px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .message.user {
+            background: #e3f2fd;
+            margin-left: 20px;
+        }
+
+        .message.assistant {
+            background: #f5f5f5;
+            margin-right: 20px;
+        }
+
+        .chat-input {
+            padding: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .chat-input input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .quick-action {
+            padding: 5px 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .quick-action:hover {
+            background: #5a6fd8;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            🚇 LA Transit App - Enhanced
+        </div>
+        <div style="color: #666; font-size: 14px;">
+            Real-time routing for any address
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="search-panel">
+            <h3 style="margin-bottom: 15px; color: #333;">Plan Your Route</h3>
+            
+            <div style="font-size: 12px; color: #666; margin-bottom: 10px; padding: 8px; background: #f8f9fa; border-radius: 6px;">
+                💡 <strong>Tip:</strong> Try "1315 W 24th Street" to "Union Station" - real geocoding + LA Metro transit data!
+                <br>🌐 <strong>Status:</strong> <span id="apiStatus">Checking...</span>
+                <br>🚇 <strong>Transit:</strong> <span id="transitStatus">LA Metro + Metrolink APIs available</span>
+            </div>
+            
+            <input type="text" id="originInput" class="search-input" placeholder="Enter starting address (e.g., 1234 Main St, LA)" />
+            <div id="originSuggestions" class="suggestions"></div>
+            
+            <input type="text" id="destinationInput" class="search-input" placeholder="Enter destination address (e.g., 5678 Oak Ave, LA)" />
+            <div id="destinationSuggestions" class="suggestions"></div>
+            
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="driving">🚗 Drive</button>
+                <button class="mode-btn" data-mode="walking">🚶 Walk</button>
+                <button class="mode-btn" data-mode="transit">🚇 Transit</button>
+                <button class="mode-btn" data-mode="multi">🔄 Multi</button>
+            </div>
+            
+            <button id="planRouteBtn" class="route-button">Plan Route</button>
+            
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                Finding the best route...
+            </div>
+            
+            <div id="routeResults" class="route-results"></div>
+        </div>
+
+        <div class="map-container">
+            <div id="map"></div>
+        </div>
+
+        <div class="chat-panel">
+            <div class="chat-header">
+                🤖 AI Assistant
+            </div>
+            <div id="chatMessages" class="chat-messages">
+                <div class="message assistant">
+                    Hi! I can help you plan routes to any address in LA. Just type an address like "1234 South ABC Street" and I'll find the best way to get there! 🚇
+                </div>
+            </div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Ask me anything about routes..." />
+                <div class="quick-actions">
+                    <button class="quick-action" onclick="askAI('Plan route from Downtown to 1234 Main St')">Route Example</button>
+                    <button class="quick-action" onclick="askAI('Find nearest station')">Find Station</button>
+                    <button class="quick-action" onclick="askAI('What\'s the fastest way?')">Fastest Route</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize enhanced routing system
+        const routingSystem = new EnhancedRoutingSystem();
+        const aiAssistant = new AITransitAssistant();
+        
+        // Initialize map
+        const map = L.map('map').setView([34.0522, -118.2437], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Route planning variables
+        let currentRoutes = [];
+        let selectedRoute = null;
+        let routeLayer = null;
+
+        // DOM elements
+        const originInput = document.getElementById('originInput');
+        const destinationInput = document.getElementById('destinationInput');
+        const planRouteBtn = document.getElementById('planRouteBtn');
+        const loading = document.getElementById('loading');
+        const routeResults = document.getElementById('routeResults');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+
+        // Event listeners
+        originInput.addEventListener('input', () => showAddressSuggestions(originInput, 'originSuggestions'));
+        destinationInput.addEventListener('input', () => showAddressSuggestions(destinationInput, 'destinationSuggestions'));
+        planRouteBtn.addEventListener('click', planRoute);
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleChatMessage();
+            }
+        });
+
+        // Mode selector
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        // Address autocomplete
+        async function showAddressSuggestions(input, suggestionsId) {
+            const query = input.value.trim();
+            const suggestionsDiv = document.getElementById(suggestionsId);
+            
+            if (query.length < 3) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            try {
+                // Show loading indicator
+                suggestionsDiv.innerHTML = '<div style="padding: 10px; text-align: center; color: #666;">🔍 Searching...</div>';
+                suggestionsDiv.style.display = 'block';
+                
+                const suggestions = await routingSystem.getAddressSuggestions(query);
+                displaySuggestions(suggestions, suggestionsDiv, input);
+            } catch (error) {
+                console.warn('Address suggestions failed:', error);
+                // Show helpful message instead of hiding
+                suggestionsDiv.innerHTML = '<div style="padding: 10px; text-align: center; color: #666;">💡 Try typing a simpler address</div>';
+                suggestionsDiv.style.display = 'block';
+            }
+        }
+
+        function displaySuggestions(suggestions, container, input) {
+            container.innerHTML = '';
+            
+            if (suggestions.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            suggestions.forEach(suggestion => {
+                const item = document.createElement('div');
+                item.className = 'suggestion-item';
+                item.textContent = suggestion.address;
+                item.addEventListener('click', () => {
+                    input.value = suggestion.address;
+                    container.style.display = 'none';
+                });
+                container.appendChild(item);
+            });
+
+            container.style.display = 'block';
+        }
+
+        // Plan route function
+        async function planRoute() {
+            const origin = originInput.value.trim();
+            const destination = destinationInput.value.trim();
+            const mode = document.querySelector('.mode-btn.active').dataset.mode;
+
+            if (!origin || !destination) {
+                showMessage('Please enter both origin and destination addresses.', 'error');
+                return;
+            }
+
+            showLoading(true);
+            planRouteBtn.disabled = true;
+
+            try {
+                let routes;
+                
+                if (mode === 'multi') {
+                    routes = await routingSystem.getMultiModalRoute(origin, destination);
+                } else {
+                    const route = await routingSystem.getRoute(origin, destination, mode);
+                    routes = [route];
+                }
+
+                displayRoutes(routes);
+                showRouteOnMap(routes[0]);
+                
+            } catch (error) {
+                console.error('Route planning failed:', error);
+                
+                // Provide more helpful error messages
+                let errorMessage = 'Route planning failed. ';
+                
+                if (error.message.includes('Could not geocode address')) {
+                    const address = error.message.match(/Could not geocode address: (.+)/)?.[1] || 'the address';
+                    errorMessage += `Could not find "${address}". Try using a simpler address format like "1234 Main St" or "Downtown LA".`;
+                } else if (error.message.includes('No route found')) {
+                    errorMessage += 'No route found between these locations. Try different addresses or transportation modes.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showMessage(errorMessage, 'error');
+            } finally {
+                showLoading(false);
+                planRouteBtn.disabled = false;
+            }
+        }
+
+        // Display route results
+        function displayRoutes(routes) {
+            routeResults.innerHTML = '';
+            currentRoutes = routes;
+
+            routes.forEach((route, index) => {
+                const routeDiv = document.createElement('div');
+                routeDiv.className = 'route-option';
+                routeDiv.addEventListener('click', () => selectRoute(index));
+
+                const duration = Math.round(route.route.duration / 60); // Convert to minutes
+                const distance = Math.round(route.route.distance / 1000 * 10) / 10; // Convert to km
+
+                routeDiv.innerHTML = `
+                    <div class="route-info">
+                        <span class="route-mode">${route.mode} 🚗</span>
+                        <span class="route-duration">${duration} min</span>
+                    </div>
+                    <div class="route-details">
+                        ${distance} km • ${route.cost ? '$' + route.cost.toFixed(2) : 'Free'}
+                    </div>
+                `;
+
+                routeResults.appendChild(routeDiv);
+            });
+
+            // Select first route by default
+            if (routes.length > 0) {
+                selectRoute(0);
+            }
+        }
+
+        // Select route
+        function selectRoute(index) {
+            document.querySelectorAll('.route-option').forEach((option, i) => {
+                option.classList.toggle('selected', i === index);
+            });
+
+            selectedRoute = currentRoutes[index];
+            showRouteOnMap(selectedRoute);
+            showRouteSteps(selectedRoute);
+        }
+
+        // Show route on map
+        function showRouteOnMap(route) {
+            // Clear previous route
+            if (routeLayer) {
+                map.removeLayer(routeLayer);
+            }
+
+            // Add route line
+            const coordinates = route.route.coordinates.map(coord => [coord.lat, coord.lng]);
+            routeLayer = L.polyline(coordinates, {
+                color: '#667eea',
+                weight: 6,
+                opacity: 0.8
+            }).addTo(map);
+
+            // Add markers
+            const originMarker = L.marker([route.origin.lat, route.origin.lng], {
+                icon: L.divIcon({
+                    className: 'custom-marker',
+                    html: '🟢',
+                    iconSize: [20, 20]
+                })
+            }).addTo(map);
+
+            const destMarker = L.marker([route.destination.lat, route.destination.lng], {
+                icon: L.divIcon({
+                    className: 'custom-marker',
+                    html: '🔴',
+                    iconSize: [20, 20]
+                })
+            }).addTo(map);
+
+            // Fit map to route
+            map.fitBounds(routeLayer.getBounds(), { padding: [20, 20] });
+        }
+
+        // Show route steps
+        function showRouteSteps(route) {
+            const stepsContainer = document.createElement('div');
+            stepsContainer.className = 'route-steps';
+            stepsContainer.innerHTML = '<h4>Route Steps:</h4>';
+
+            route.route.steps.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'route-step';
+                stepDiv.innerHTML = `
+                    <div class="step-instruction">${index + 1}. ${step.instruction}</div>
+                    <div class="step-details">
+                        ${Math.round(step.distance)}m • ${Math.round(step.duration / 60)}min
+                    </div>
+                `;
+                stepsContainer.appendChild(stepDiv);
+            });
+
+            routeResults.appendChild(stepsContainer);
+        }
+
+        // Chat functionality
+        async function handleChatMessage() {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Add user message
+            addChatMessage(message, 'user');
+            chatInput.value = '';
+
+            // Get AI response
+            try {
+                const response = await aiAssistant.getIntelligentResponse(message);
+                addChatMessage(response.message, 'assistant');
+                
+                // Handle quick actions
+                if (response.quickActions) {
+                    addQuickActions(response.quickActions);
+                }
+            } catch (error) {
+                addChatMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+            }
+        }
+
+        function addChatMessage(message, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.textContent = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addQuickActions(actions) {
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'quick-actions';
+            
+            actions.forEach(action => {
+                const btn = document.createElement('button');
+                btn.className = 'quick-action';
+                btn.textContent = action;
+                btn.onclick = () => askAI(action);
+                actionsDiv.appendChild(btn);
+            });
+
+            chatMessages.appendChild(actionsDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function askAI(question) {
+            addChatMessage(question, 'user');
+            
+            try {
+                const response = await aiAssistant.getIntelligentResponse(question);
+                addChatMessage(response.message, 'assistant');
+            } catch (error) {
+                addChatMessage('Sorry, I encountered an error.', 'assistant');
+            }
+        }
+
+        // Utility functions
+        function showLoading(show) {
+            loading.classList.toggle('show', show);
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `${type}-message`;
+            messageDiv.textContent = message;
+            routeResults.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        // Check API status on startup
+        async function checkAPIStatus() {
+            const statusElement = document.getElementById('apiStatus');
+            try {
+                // Test a simple geocoding request
+                const result = await routingSystem.geocodeAddress('Downtown LA');
+                if (result && result.confidence === 'high') {
+                    statusElement.innerHTML = '✅ Connected (APIs working)';
+                    statusElement.style.color = '#2e7d32';
+                } else if (result && result.confidence === 'medium') {
+                    statusElement.innerHTML = '⚠️ Limited (using local data)';
+                    statusElement.style.color = '#f57c00';
+                } else {
+                    statusElement.innerHTML = '🔄 Local (offline mode)';
+                    statusElement.style.color = '#1976d2';
+                }
+            } catch (error) {
+                statusElement.innerHTML = '🔄 Local (offline mode)';
+                statusElement.style.color = '#1976d2';
+            }
+        }
+
+        // Initialize with example and check API status
+        setTimeout(() => {
+            originInput.value = 'Downtown LA';
+            destinationInput.value = '1234 Main St, Los Angeles, CA';
+            checkAPIStatus();
+        }, 1000);
+    </script>
+</body>
+</html>

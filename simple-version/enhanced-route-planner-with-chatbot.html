@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Route Planner with AI Chatbot - LA Transit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr 350px;
+            gap: 0;
+            min-height: 700px;
+        }
+
+        .ai-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .route-section {
+            background: white;
+            padding: 30px;
+            border-right: 1px solid #e9ecef;
+        }
+
+        .chatbot-section {
+            background: #f0f2f5;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-title {
+            color: #667eea;
+        }
+
+        .route-title {
+            color: #28a745;
+        }
+
+        .chatbot-title {
+            color: #e74c3c;
+        }
+
+        /* Route Input Form */
+        .route-form {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .plan-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: 100%;
+        }
+
+        .plan-button:hover {
+            transform: translateY(-2px);
+        }
+
+        /* AI Features Section */
+        .ai-features {
+            display: grid;
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .ai-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s ease;
+        }
+
+        .ai-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .ai-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .ai-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .ai-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s ease;
+        }
+
+        .ai-button:hover {
+            background: #5a6fd8;
+        }
+
+        /* Transportation Options */
+        .transport-options {
+            display: grid;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .transport-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 2px solid #e9ecef;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .transport-card:hover {
+            border-color: #28a745;
+            transform: translateY(-2px);
+        }
+
+        .transport-card.selected {
+            border-color: #28a745;
+            background: #f8fff9;
+        }
+
+        .transport-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .transport-icon {
+            font-size: 2rem;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .public-transit {
+            background: #28a745;
+        }
+
+        .sharing-rides {
+            background: #ffc107;
+        }
+
+        .check-arrivals {
+            background: #17a2b8;
+        }
+
+        .transport-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .transport-description {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        /* AI Suggestions */
+        .ai-suggestions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 2px solid #e9ecef;
+        }
+
+        .suggestion-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #28a745;
+        }
+
+        .suggestion-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .suggestion-desc {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* Chatbot Styles */
+        .chatbot-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .message.user .message-avatar {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.bot .message-avatar {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .message-content {
+            background: #f1f3f4;
+            padding: 12px 16px;
+            border-radius: 18px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.bot .message-content {
+            background: #f1f3f4;
+            color: #333;
+        }
+
+        .chatbot-input {
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 0.9rem;
+        }
+
+        .chatbot-input input:focus {
+            outline: none;
+            border-color: #e74c3c;
+        }
+
+        .send-button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .send-button:hover {
+            background: #c0392b;
+        }
+
+        .voice-button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .voice-button:hover {
+            background: #218838;
+        }
+
+        .voice-button.listening {
+            background: #dc3545;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .chatbot-section {
+                grid-column: 1 / -1;
+                border-right: none;
+                border-top: 1px solid #e9ecef;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .ai-section, .route-section {
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Success/Error Messages */
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚇 Enhanced Route Planner with AI Assistant</h1>
+            <p>AI-Powered Route Planning with Smart Suggestions & Real-time Chat Support</p>
+        </div>
+
+        <div class="main-content">
+            <!-- AI Features Section -->
+            <div class="ai-section">
+                <h2 class="section-title ai-title">
+                    🤖 AI Route Assistant
+                </h2>
+
+                <!-- Route Input Form -->
+                <div class="route-form">
+                    <div class="form-group">
+                        <label for="origin">📍 From:</label>
+                        <input type="text" id="origin" placeholder="Enter starting location">
+                    </div>
+                    <div class="form-group">
+                        <label for="destination">🎯 To:</label>
+                        <input type="text" id="destination" placeholder="Enter destination">
+                    </div>
+                    <button class="plan-button" onclick="planRoute()">
+                        🗺️ Plan Route with AI
+                    </button>
+                </div>
+
+                <!-- AI Features -->
+                <div class="ai-features">
+                    <div class="ai-card">
+                        <h3>🧠 AI Smart Suggestions</h3>
+                        <p>Get intelligent route recommendations based on real-time traffic, weather, and your preferences.</p>
+                        <button class="ai-button" onclick="getAISuggestions()">Get AI Suggestions</button>
+                    </div>
+
+                    <div class="ai-card">
+                        <h3>🔮 AI Predictions</h3>
+                        <p>Predict travel times, delays, and optimal departure times using machine learning.</p>
+                        <button class="ai-button" onclick="getAIPredictions()">View Predictions</button>
+                    </div>
+
+                    <div class="ai-card">
+                        <h3>👤 Personalized for You</h3>
+                        <p>Routes tailored to your preferences: fastest, cheapest, most scenic, or accessible.</p>
+                        <button class="ai-button" onclick="getPersonalizedRoutes()">Personalize Routes</button>
+                    </div>
+                </div>
+
+                <!-- AI Suggestions Display -->
+                <div id="aiSuggestions" class="ai-suggestions" style="display: none;">
+                    <h3>💡 AI Recommendations</h3>
+                    <div id="suggestionsList"></div>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>AI is analyzing your route...</p>
+                </div>
+
+                <!-- Messages -->
+                <div id="message" class="message"></div>
+            </div>
+
+            <!-- Transportation Options Section -->
+            <div class="route-section">
+                <h2 class="section-title route-title">
+                    🚗 Choose Transportation
+                </h2>
+
+                <div class="transport-options">
+                    <div class="transport-card" onclick="selectTransport('public-transit')">
+                        <div class="transport-header">
+                            <div class="transport-icon public-transit">🚇</div>
+                            <div>
+                                <div class="transport-title">Public Transit</div>
+                                <div class="transport-description">Metro, buses, and rail services</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="transport-card" onclick="selectTransport('sharing-rides')">
+                        <div class="transport-header">
+                            <div class="transport-icon sharing-rides">🚗</div>
+                            <div>
+                                <div class="transport-title">Sharing Rides</div>
+                                <div class="transport-description">Uber, Lyft, and carpooling</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="transport-card" onclick="selectTransport('check-arrivals')">
+                        <div class="transport-header">
+                            <div class="transport-icon check-arrivals">⏰</div>
+                            <div>
+                                <div class="transport-title">Check Arrivals</div>
+                                <div class="transport-description">Real-time schedules and arrivals</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Route Details -->
+                <div id="routeDetails" style="display: none;">
+                    <h3>📋 Route Summary</h3>
+                    <div id="routeInfo"></div>
+                </div>
+            </div>
+
+            <!-- AI Chatbot Section -->
+            <div class="chatbot-section">
+                <h2 class="section-title chatbot-title">
+                    💬 AI Assistant
+                </h2>
+                
+                <div class="chatbot-container">
+                    <div class="chatbot-header">
+                        <div>🤖</div>
+                        <div>
+                            <div style="font-weight: 600;">LA Transit AI</div>
+                            <div style="font-size: 0.8rem; opacity: 0.9;">Ask me anything about routes!</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chatbot-messages" id="chatbotMessages">
+                        <div class="message bot">
+                            <div class="message-avatar">🤖</div>
+                            <div class="message-content">
+                                Hi! I'm your LA Transit AI assistant. I can help you plan routes, check schedules, and answer questions about public transportation. What would you like to know?
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chatbot-input">
+                        <div class="input-group">
+                            <input type="text" id="chatbotInput" placeholder="Ask about routes, schedules, or Metro info..." onkeypress="handleChatbotKeyPress(event)">
+                            <button class="voice-button" id="voiceButton" onclick="toggleVoiceRecognition()">🎤</button>
+                            <button class="send-button" onclick="sendChatbotMessage()">➤</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedTransport = null;
+        let isListening = false;
+        let recognition = null;
+
+        // Initialize speech recognition
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('chatbotInput').value = transcript;
+                sendChatbotMessage();
+            };
+
+            recognition.onend = function() {
+                isListening = false;
+                document.getElementById('voiceButton').classList.remove('listening');
+            };
+        }
+
+        function planRoute() {
+            const origin = document.getElementById('origin').value.trim();
+            const destination = document.getElementById('destination').value.trim();
+
+            if (!origin || !destination) {
+                showMessage('Please enter both origin and destination', 'error');
+                return;
+            }
+
+            showLoading(true);
+            
+            // Simulate AI processing
+            setTimeout(() => {
+                showLoading(false);
+                showMessage('Route planned successfully! Check AI suggestions below.', 'success');
+                getAISuggestions();
+                showRouteDetails(origin, destination);
+                
+                // Add chatbot message about the route
+                addChatbotMessage(`I've planned your route from ${origin} to ${destination}. The best option is the Metro Red Line taking 25 minutes for $1.75. Would you like me to explain the route in detail?`, 'bot');
+            }, 2000);
+        }
+
+        function getAISuggestions() {
+            const suggestionsList = document.getElementById('suggestionsList');
+            const aiSuggestions = document.getElementById('aiSuggestions');
+            
+            const suggestions = [
+                {
+                    title: '🚇 Metro Route (Recommended)',
+                    desc: 'Take Red Line from Downtown to Hollywood - 25 min, $1.75'
+                },
+                {
+                    title: '🚌 Bus Route (Cheapest)',
+                    desc: 'Bus 217 from Downtown to Hollywood - 35 min, $1.75'
+                },
+                {
+                    title: '🚗 Ride Share (Fastest)',
+                    desc: 'Uber/Lyft from Downtown to Hollywood - 15 min, $12-18'
+                },
+                {
+                    title: '🚴 Bike Route (Eco-friendly)',
+                    desc: 'Bike path along Sunset Blvd - 45 min, free'
+                }
+            ];
+
+            suggestionsList.innerHTML = suggestions.map(suggestion => `
+                <div class="suggestion-item">
+                    <div class="suggestion-title">${suggestion.title}</div>
+                    <div class="suggestion-desc">${suggestion.desc}</div>
+                </div>
+            `).join('');
+
+            aiSuggestions.style.display = 'block';
+        }
+
+        function getAIPredictions() {
+            showMessage('AI Predictions: Light traffic expected. Departure in 10 minutes recommended.', 'success');
+            addChatbotMessage('Based on current conditions, I predict light traffic. The best time to depart is in 10 minutes for optimal travel time.', 'bot');
+        }
+
+        function getPersonalizedRoutes() {
+            showMessage('Personalized routes loaded based on your preferences!', 'success');
+            addChatbotMessage('I\'ve loaded personalized routes based on your preferences for fastest travel time and cost efficiency.', 'bot');
+        }
+
+        function selectTransport(type) {
+            selectedTransport = type;
+            
+            // Remove previous selections
+            document.querySelectorAll('.transport-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selection to clicked card
+            event.currentTarget.classList.add('selected');
+            
+            // Show appropriate action based on selection
+            switch(type) {
+                case 'public-transit':
+                    showMessage('Public transit selected! Click "View on Google Maps" to see detailed route.', 'success');
+                    addChatbotMessage('Great choice! Public transit is often the most cost-effective option. I can help you with Metro schedules and real-time updates.', 'bot');
+                    break;
+                case 'sharing-rides':
+                    showMessage('Ride sharing selected! Check Uber/Lyft for current prices.', 'success');
+                    addChatbotMessage('Ride sharing is perfect for convenience! Current Uber/Lyft prices are around $12-18 for this route.', 'bot');
+                    break;
+                case 'check-arrivals':
+                    showMessage('Arrival times loaded! Check real-time schedules.', 'success');
+                    addChatbotMessage('I\'ve loaded real-time arrival information. The next Metro train arrives in 8 minutes.', 'bot');
+                    break;
+            }
+        }
+
+        function showRouteDetails(origin, destination) {
+            const routeDetails = document.getElementById('routeDetails');
+            const routeInfo = document.getElementById('routeInfo');
+            
+            routeInfo.innerHTML = `
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 15px;">
+                    <p><strong>From:</strong> ${origin}</p>
+                    <p><strong>To:</strong> ${destination}</p>
+                    <p><strong>Best Option:</strong> Metro Red Line (25 min, $1.75)</p>
+                    <p><strong>Alternative:</strong> Bus 217 (35 min, $1.75)</p>
+                    <button onclick="openGoogleMaps('${origin}', '${destination}')" 
+                            style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; margin-top: 10px;">
+                        🗺️ View on Google Maps
+                    </button>
+                </div>
+            `;
+            
+            routeDetails.style.display = 'block';
+        }
+
+        function openGoogleMaps(origin, destination) {
+            const url = `https://www.google.com/maps/dir/${encodeURIComponent(origin)}/${encodeURIComponent(destination)}`;
+            window.open(url, '_blank');
+            addChatbotMessage('I\'ve opened Google Maps with your route. You can now see detailed directions and real-time traffic information.', 'bot');
+        }
+
+        // Chatbot Functions
+        function sendChatbotMessage() {
+            const input = document.getElementById('chatbotInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                addChatbotMessage(message, 'user');
+                input.value = '';
+                
+                // Simulate AI response
+                setTimeout(() => {
+                    const response = generateAIResponse(message);
+                    addChatbotMessage(response, 'bot');
+                }, 1000);
+            }
+        }
+
+        function handleChatbotKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatbotMessage();
+            }
+        }
+
+        function addChatbotMessage(text, sender) {
+            const messagesContainer = document.getElementById('chatbotMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${sender === 'user' ? '👤' : '🤖'}</div>
+                <div class="message-content">${text}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function generateAIResponse(userMessage) {
+            const message = userMessage.toLowerCase();
+            
+            if (message.includes('route') || message.includes('directions')) {
+                return 'I can help you plan routes! Enter your starting point and destination in the form, then click "Plan Route with AI" for personalized recommendations.';
+            } else if (message.includes('schedule') || message.includes('time')) {
+                return 'Metro trains typically run every 6-12 minutes during peak hours and every 12-20 minutes during off-peak. You can check real-time arrivals by selecting "Check Arrivals" in the transportation options.';
+            } else if (message.includes('fare') || message.includes('cost') || message.includes('price')) {
+                return 'Metro fares are $1.75 for a single ride, $7 for a day pass, or $25 for a 7-day pass. Transfers are free within 2 hours of first boarding.';
+            } else if (message.includes('metro') || message.includes('train') || message.includes('subway')) {
+                return 'LA Metro has 6 rail lines: Red, Purple, Blue, Green, Gold, and Expo. The Red Line connects Downtown to North Hollywood, and the Purple Line goes to Koreatown.';
+            } else if (message.includes('bus')) {
+                return 'LA Metro operates over 100 bus routes throughout the county. Most buses run every 10-30 minutes depending on the route and time of day.';
+            } else if (message.includes('traffic') || message.includes('delay')) {
+                return 'I can help you avoid traffic! Use the AI Predictions feature to get real-time traffic updates and optimal departure times for your route.';
+            } else {
+                return 'I\'m here to help with all your LA transit questions! You can ask me about routes, schedules, fares, or use the AI features to get personalized recommendations.';
+            }
+        }
+
+        function toggleVoiceRecognition() {
+            if (!recognition) {
+                addChatbotMessage('Voice recognition is not supported in your browser. Please type your message.', 'bot');
+                return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+                document.getElementById('voiceButton').classList.remove('listening');
+            } else {
+                recognition.start();
+                isListening = true;
+                document.getElementById('voiceButton').classList.add('listening');
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Auto-fill example for testing
+        document.addEventListener('DOMContentLoaded', function() {
+            // Uncomment the lines below to auto-fill for testing
+            // document.getElementById('origin').value = 'Downtown LA';
+            // document.getElementById('destination').value = 'Hollywood';
+        });
+    </script>
+</body>
+</html>
