@@ -7,7 +7,6 @@ This repository contains:
 - A lightweight web prototype
 - A Flutter mobile app
 
-Details about internal structure and scripts are intentionally kept minimal in this public README.
 
 ### API Keys and Security
 
